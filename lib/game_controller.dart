@@ -16,23 +16,64 @@ class GameController extends ChangeNotifier {
 
   Future<void> _init() async {
     try {
+      // 1. ユーザープロファイルの読み込み
       user = await _repository.loadUserProfile();
       if (user == null) {
         user = UserProfile(name: '新人プレイヤー', homeCountry: '日本');
         await _repository.saveUserProfile(user!);
       }
       
+      // 2. 政治家リストの読み込み
       politicians = await _repository.loadPoliticians();
+      
+      // もし読み込んだリストが空なら、強制的に初期データを生成する
+      if (politicians.isEmpty) {
+        // GameRepositoryのloadPoliticiansはデータがない場合に_generateInitialPoliticiansを呼ぶはずだが、
+        // 万が一空のリストが返ってきた場合のセーフティネット
+        politicians = [
+          Politician(
+            id: 'jp_leader',
+            name: '日本首脳',
+            country: '日本',
+            rarity: Rarity.low,
+            odds: 1.2,
+            isUnlocked: true,
+            faceImages: ['assets/images/pol_jp_leader.png'],
+            tier: 0,
+          ),
+        ];
+        await _repository.savePoliticians(politicians);
+      }
+      
+      // 3. アイテムリストの読み込み
       items = await _repository.loadItems();
       
-      // 初期選択
-      if (politicians.isNotEmpty) {
-        selectedPolitician = politicians.firstWhere((p) => p.isUnlocked, orElse: () => politicians.first);
-      }
+      // 4. 初期選択政治家の設定
+      // アンロックされている政治家を探し、いなければ最初の政治家を選択
+      selectedPolitician = politicians.firstWhere(
+        (p) => p.isUnlocked, 
+        orElse: () => politicians.first
+      );
+      
     } catch (e) {
-      debugPrint('Error during GameController initialization: $e');
-      // 致命的なエラー時でも最低限のデータをセットして起動を妨げない
+      debugPrint('CRITICAL ERROR during GameController initialization: $e');
+      // 致命的なエラー時でもアプリが動くように最小限のデータをセット
       user ??= UserProfile(name: '新人プレイヤー', homeCountry: '日本');
+      if (politicians.isEmpty) {
+        politicians = [
+          Politician(
+            id: 'jp_leader',
+            name: '日本首脳',
+            country: '日本',
+            rarity: Rarity.low,
+            odds: 1.2,
+            isUnlocked: true,
+            faceImages: ['assets/images/pol_jp_leader.png'],
+            tier: 0,
+          ),
+        ];
+        selectedPolitician = politicians.first;
+      }
     } finally {
       notifyListeners();
     }
