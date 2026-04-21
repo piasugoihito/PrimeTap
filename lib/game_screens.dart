@@ -32,6 +32,11 @@ class WorldMapScreen extends StatelessWidget {
             ),
             _CountryPin(top: 250, left: 850, country: '日本'),
             _CountryPin(top: 350, left: 300, country: 'アメリカ'),
+            _CountryPin(top: 220, left: 550, country: 'イギリス'),
+            _CountryPin(top: 280, left: 580, country: 'フランス'),
+            _CountryPin(top: 320, left: 610, country: 'イタリア'),
+            _CountryPin(top: 180, left: 750, country: 'ロシア'),
+            _CountryPin(top: 450, left: 250, country: 'メキシコ'),
           ],
         ),
       ),
@@ -112,14 +117,30 @@ class _PoliticianCard extends StatelessWidget {
 	        ),
         title: Text(politician.name, style: AppTheme.glossyTextStyle(color: Colors.black87, fontSize: 18)),
         subtitle: Text('レアリティ: ${politician.rarity.name}', style: const TextStyle(color: Colors.black54)),
-        trailing: politician.isUnlocked
-            ? const Icon(Icons.check_circle, color: AppTheme.primaryCyan, size: 30)
-            : ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryCyan),
-                onPressed: () => controller.unlockPolitician(politician),
-                child: const Text('アンロック', style: TextStyle(color: Colors.white)),
-              ),
-      ),
+	        trailing: politician.isUnlocked
+	            ? const Icon(Icons.check_circle, color: AppTheme.primaryCyan, size: 30)
+	            : Column(
+	                mainAxisSize: MainAxisSize.min,
+	                children: [
+	                  ElevatedButton(
+	                    style: ElevatedButton.styleFrom(
+	                      backgroundColor: AppTheme.primaryCyan,
+	                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+	                    ),
+	                    onPressed: () async {
+	                      bool success = await controller.unlockPolitician(politician);
+	                      if (!success && context.mounted) {
+	                        ScaffoldMessenger.of(context).showSnackBar(
+	                          const SnackBar(content: Text('アンロック条件: 予算50 & 日本首脳Lv3')),
+	                        );
+	                      }
+	                    },
+	                    child: const Text('解放', style: TextStyle(color: Colors.white, fontSize: 12)),
+	                  ),
+	                  const Text('予算50/日Lv3', style: TextStyle(fontSize: 9, color: Colors.grey)),
+	                ],
+	              ),
+	      ),
     );
   }
 }

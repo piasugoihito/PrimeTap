@@ -91,11 +91,10 @@ class GameController extends ChangeNotifier {
     double earnedCoins = points * selectedPolitician!.odds;
     user!.budgetCoins += earnedCoins;
 
-    // 親密度レベルアップ (1->2: 1000 taps, 2->3: 5000 taps)
-    if (selectedPolitician!.intimacyLevel == 1 && selectedPolitician!.politicianTaps >= 1000) {
-      selectedPolitician!.intimacyLevel = 2;
-    } else if (selectedPolitician!.intimacyLevel == 2 && selectedPolitician!.politicianTaps >= 5000) {
-      selectedPolitician!.intimacyLevel = 3;
+    // 親密度レベルアップ (100タップごとに1レベル上昇)
+    int newLevel = (selectedPolitician!.politicianTaps / 100).floor() + 1;
+    if (newLevel > selectedPolitician!.intimacyLevel) {
+      selectedPolitician!.intimacyLevel = newLevel;
     }
 
     _repository.saveUserProfile(user!);
@@ -106,33 +105,21 @@ class GameController extends ChangeNotifier {
   Future<bool> unlockPolitician(Politician p) async {
     if (user == null || p.isUnlocked) return false;
     
-    double cost = _getUnlockCost(p);
-    if (user!.budgetCoins >= cost) {
-      user!.budgetCoins -= cost;
-      p.isUnlocked = true;
-      await _repository.saveUserProfile(user!);
-      await _repository.savePoliticians(politicians);
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
-
-  double _getUnlockCost(Politician p) {
-    // レアリティに比例
-    double baseCost = 1000;
-    switch (p.rarity) {
-      case Rarity.low: baseCost = 500; break;
-      case Rarity.medium: baseCost = 2000; break;
-      case Rarity.high: baseCost = 10000; break;
-      case Rarity.boss: baseCost = 50000; break;
-    }
+    // アンロック条件のチェック
+    // 1. 国家予算ポイント (50)
+    if (user!.budgetCoins < 50) return false;
     
-    // 国家戦略: 特定の政治家は安価 (例: 各国の最初の政治家)
-    if (p.id.endsWith('_01')) {
-      baseCost *= 0.5;
-    }
-    return baseCost;
+    // 2. 日本首脳のレベル (Lv3以上)
+    final jpLeader = politicians.firstWhere((pol) => pol.id == 'jp_leader');
+    if (jpLeader.intimacyLevel < 3) return false;
+    
+    // 条件達成: 予算を消費してアンロック
+    user!.budgetCoins -= 50;
+    p.isUnlocked = true;
+    await _repository.saveUserProfile(user!);
+    await _repository.savePoliticians(politicians);
+    notifyListeners();
+    return true;
   }
 
   void selectPolitician(Politician p) {

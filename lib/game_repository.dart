@@ -60,7 +60,7 @@ class GameRepository {
         faceImages: ['assets/images/pol_jp_leader.png'],
         tier: 0,
       ),
-      // Tier 1: G7諸国
+      // Tier 1: 各国首脳 (条件: 日本首脳がLv3)
       Politician(
         id: 'usa_leader',
         name: 'アメリカ首脳',
@@ -101,7 +101,6 @@ class GameRepository {
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
-      // Tier 2: その他主要国
       Politician(
         id: 'rus_leader',
         name: 'ロシア首脳',
@@ -109,8 +108,8 @@ class GameRepository {
         rarity: Rarity.high,
         odds: 3.5,
         faceImages: ['assets/images/pol_rus_leader.png'],
-        tier: 2,
-        requiredPoliticianIds: ['usa_leader', 'uk_leader'],
+        tier: 1,
+        requiredPoliticianIds: ['jp_leader'],
       ),
       Politician(
         id: 'mex_leader',
@@ -119,18 +118,18 @@ class GameRepository {
         rarity: Rarity.high,
         odds: 3.5,
         faceImages: ['assets/images/pol_mex_leader.png'],
-        tier: 2,
-        requiredPoliticianIds: ['usa_leader'],
+        tier: 1,
+        requiredPoliticianIds: ['jp_leader'],
       ),
     ];
   }
 
   List<GameItem> _generateInitialItems() {
-    return List.generate(10, (index) => GameItem(
-      id: 'item_${index.toString().padLeft(3, '0')}',
-      name: 'アイテム ${index + 1}',
-      description: 'タップ効率が上昇するアイテムです。',
-      efficiencyBoost: 0.05,
+    return List.generate(100, (index) => GameItem(
+      id: 'policy_${(index + 1).toString().padLeft(3, '0')}',
+      name: '政策 No.${index + 1}',
+      description: '国家のタップ効率が上昇する重要な政策です。',
+      efficiencyBoost: 0.02,
     ));
   }
 
