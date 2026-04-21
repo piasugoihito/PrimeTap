@@ -367,7 +367,12 @@ class MyPoliticiansScreen extends StatelessWidget {
               ),
               onTap: () {
                 context.read<GameController>().selectPolitician(p);
-                Navigator.pop(context);
+                // スタート画面まで戻り、そこから育成画面へ遷移させる
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TrainingScreen()),
+                );
               },
             ),
           );
