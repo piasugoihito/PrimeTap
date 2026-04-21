@@ -15,18 +15,27 @@ class GameController extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    user = await _repository.loadUserProfile();
-    if (user == null) {
-      user = UserProfile(name: '新人プレイヤー', homeCountry: '日本');
-      await _repository.saveUserProfile(user!);
+    try {
+      user = await _repository.loadUserProfile();
+      if (user == null) {
+        user = UserProfile(name: '新人プレイヤー', homeCountry: '日本');
+        await _repository.saveUserProfile(user!);
+      }
+      
+      politicians = await _repository.loadPoliticians();
+      items = await _repository.loadItems();
+      
+      // 初期選択
+      if (politicians.isNotEmpty) {
+        selectedPolitician = politicians.firstWhere((p) => p.isUnlocked, orElse: () => politicians.first);
+      }
+    } catch (e) {
+      debugPrint('Error during GameController initialization: $e');
+      // 致命的なエラー時でも最低限のデータをセットして起動を妨げない
+      user ??= UserProfile(name: '新人プレイヤー', homeCountry: '日本');
+    } finally {
+      notifyListeners();
     }
-    
-    politicians = await _repository.loadPoliticians();
-    items = await _repository.loadItems();
-    
-    // 初期選択
-    selectedPolitician = politicians.firstWhere((p) => p.isUnlocked, orElse: () => politicians.first);
-    notifyListeners();
   }
 
   void handleTap() {

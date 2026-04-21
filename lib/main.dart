@@ -66,33 +66,14 @@ class StartScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Spacer(flex: 2),
-                  // タイトル（発光エフェクト）
-                  Text(
-                    'PrimeTap',
-                    style: AppTheme.glossyTextStyle(
-                      fontSize: 64,
-                      color: Colors.white,
-                    ).copyWith(
-                      letterSpacing: 2,
-                      shadows: [
-                        Shadow(
-                          color: AppTheme.primaryCyan.withValues(alpha: 0.8),
-                          blurRadius: 20,
-                        ),
-                      ],
-                    ),
+                  const Spacer(flex: 1),
+                  // タイトルロゴ画像
+                  Image.asset(
+                    'assets/images/title_logo.png',
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '政治家育成タップゲーム',
-                    style: AppTheme.glossyTextStyle(
-                      fontSize: 20,
-                      color: AppTheme.lightCyan,
-                      bold: false,
-                    ),
-                  ),
-                  const Spacer(flex: 3),
+                  const Spacer(flex: 4),
                   // ボタン群
                   GlossyButton(
                     label: '育成を始める',
@@ -116,11 +97,18 @@ class StartScreen extends StatelessWidget {
                         context: context,
                         builder: (_) => AlertDialog(
                           title: const Text('免責事項'),
-                          content: const Text('本アプリはフィクションであり、実在の人物・団体とは一切関係ありません。'),
+                          content: const SingleChildScrollView(
+                            child: Text(
+                              '1. 本アプリはエンターテインメントを目的としたフィクションであり、実在の人物、団体、国、政治的出来事とは一切関係ありません。\\n\\n'
+                              '2. アプリ内で使用されている画像や名称は、特定の個人を誹謗中傷したり、政治的意図を持って使用されているものではありません。\\n\\n'
+                              '3. 本アプリの利用によって生じた損害について、開発者は一切の責任を負いません。\\n\\n'
+                              '4. アプリ内のコンテンツは予告なく変更・削除される場合があります。',
+                            ),
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('閉じる'),
+                              child: const Text('承諾して閉じる'),
                             ),
                           ],
                         ),

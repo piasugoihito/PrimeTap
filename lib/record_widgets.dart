@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
+import 'theme.dart';
 
 class RecordDashboard extends StatelessWidget {
   const RecordDashboard({super.key});
@@ -13,7 +14,16 @@ class RecordDashboard extends StatelessWidget {
     if (user == null) return const Scaffold(body: Center(child: Text('データがありません')));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('記録'), backgroundColor: Colors.cyan[100]),
+      backgroundColor: AppTheme.lightCyan,
+      appBar: AppBar(
+        title: Text('記録', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
