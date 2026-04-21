@@ -84,10 +84,14 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
             politician.name,
             style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
           ),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 10, showShadow: false),
-            child: Text('Lv.${politician.intimacyLevel}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 20, showShadow: false),
+            child: Text(
+              '親密度レベル: ${politician.intimacyLevel}', 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+            ),
           ),
           const Spacer(),
           GestureDetector(
@@ -112,7 +116,7 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
                       ],
                     ),
                   ),
-                  // キャラクター画像（テカテカ感）
+                  // キャラクター画像（レベルに応じて変化）
                   Container(
                     width: 250,
                     height: 250,
@@ -120,12 +124,10 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
                       shape: BoxShape.circle,
                       color: Colors.white,
                       border: Border.all(color: Colors.white, width: 5),
-	                      image: DecorationImage(
-	                        image: AssetImage(
-	                          politician.faceImages.isNotEmpty ? politician.faceImages.first : 'assets/images/pol_jp_leader.png',
-	                        ),
-	                        fit: BoxFit.cover,
-	                      ),
+                      image: DecorationImage(
+                        image: AssetImage(politician.currentFaceImage),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   // 鏡面反射オーバーレイ
@@ -153,9 +155,22 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
             ),
           ),
           const SizedBox(height: 30),
-          Text(
-            '累計タップ: ${politician.politicianTaps}',
-            style: AppTheme.glossyTextStyle(fontSize: 20, color: Colors.cyan[800]!),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: AppTheme.glossyDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: 15),
+            child: Column(
+              children: [
+                Text(
+                  '総タップポイント: ${politician.politicianPoints}',
+                  style: AppTheme.glossyTextStyle(fontSize: 22, color: Colors.cyan[800]!),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '（総タップ回数: ${politician.politicianTaps}）',
+                  style: TextStyle(fontSize: 14, color: Colors.cyan[600]!),
+                ),
+              ],
+            ),
           ),
           const Spacer(),
           _BottomMenu(),

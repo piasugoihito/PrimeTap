@@ -3,9 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'game_models.dart';
 
 class GameRepository {
-  static const String _userKey = 'user_profile_v3';
-  static const String _politiciansKey = 'politicians_list_v3';
-  static const String _itemsKey = 'items_list_v3';
+  static const String _userKey = 'user_profile_v4';
+  static const String _politiciansKey = 'politicians_list_v4';
+  static const String _itemsKey = 'items_list_v4';
 
   Future<void> saveUserProfile(UserProfile user) async {
     final prefs = await SharedPreferences.getInstance();
@@ -57,7 +57,11 @@ class GameRepository {
         rarity: Rarity.low,
         odds: 1.2,
         isUnlocked: true,
-        faceImages: ['assets/images/pol_jp_leader.png'],
+        faceImages: [
+          'assets/images/pol_jp_leader.png',
+          'assets/images/pol_jp_leader.png',
+          'assets/images/pol_jp_leader.png',
+        ],
         tier: 0,
       ),
       // Tier 1: 各国首脳 (条件: 日本首脳がLv3)
@@ -67,7 +71,11 @@ class GameRepository {
         country: 'アメリカ',
         rarity: Rarity.medium,
         odds: 2.5,
-        faceImages: ['assets/images/pol_usa_leader.png'],
+        faceImages: [
+          'assets/images/pol_usa_leader.png',
+          'assets/images/pol_usa_leader.png',
+          'assets/images/pol_usa_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
@@ -77,7 +85,11 @@ class GameRepository {
         country: 'イギリス',
         rarity: Rarity.medium,
         odds: 2.5,
-        faceImages: ['assets/images/pol_uk_leader.png'],
+        faceImages: [
+          'assets/images/pol_uk_leader.png',
+          'assets/images/pol_uk_leader.png',
+          'assets/images/pol_uk_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
@@ -87,7 +99,11 @@ class GameRepository {
         country: 'フランス',
         rarity: Rarity.medium,
         odds: 2.5,
-        faceImages: ['assets/images/pol_fra_leader.png'],
+        faceImages: [
+          'assets/images/pol_fra_leader.png',
+          'assets/images/pol_fra_leader.png',
+          'assets/images/pol_fra_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
@@ -97,7 +113,11 @@ class GameRepository {
         country: 'イタリア',
         rarity: Rarity.medium,
         odds: 2.5,
-        faceImages: ['assets/images/pol_ita_leader.png'],
+        faceImages: [
+          'assets/images/pol_ita_leader.png',
+          'assets/images/pol_ita_leader.png',
+          'assets/images/pol_ita_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
@@ -107,7 +127,11 @@ class GameRepository {
         country: 'ロシア',
         rarity: Rarity.high,
         odds: 3.5,
-        faceImages: ['assets/images/pol_rus_leader.png'],
+        faceImages: [
+          'assets/images/pol_rus_leader.png',
+          'assets/images/pol_rus_leader.png',
+          'assets/images/pol_rus_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),
@@ -117,7 +141,11 @@ class GameRepository {
         country: 'メキシコ',
         rarity: Rarity.high,
         odds: 3.5,
-        faceImages: ['assets/images/pol_mex_leader.png'],
+        faceImages: [
+          'assets/images/pol_mex_leader.png',
+          'assets/images/pol_mex_leader.png',
+          'assets/images/pol_mex_leader.png',
+        ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),

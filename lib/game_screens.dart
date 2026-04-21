@@ -14,6 +14,10 @@ class WorldMapScreen extends StatelessWidget {
         title: Text('世界地図', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: AppTheme.lightCyan,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: InteractiveViewer(
         constrained: false,
@@ -78,18 +82,31 @@ class _CountryPin extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: politicians.length,
-          itemBuilder: (context, index) {
-            final p = politicians[index];
-            return _PoliticianCard(politician: p);
-          },
+        child: Column(
+          children: [
+            const SizedBox(height: 15),
+            Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+            const SizedBox(height: 15),
+            Text('$countryの政治家カタログ', style: AppTheme.glossyTextStyle(fontSize: 20, color: AppTheme.deepCyan)),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: politicians.length,
+                itemBuilder: (context, index) {
+                  final p = politicians[index];
+                  return _PoliticianCard(politician: p);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -111,36 +128,46 @@ class _PoliticianCard extends StatelessWidget {
         showShadow: true,
       ),
       child: ListTile(
-	        leading: Image.asset(
-	          politician.faceImages.isNotEmpty ? politician.faceImages.first : 'assets/images/pol_jp_leader.png',
-	          width: 50,
-	        ),
+        leading: ClipOval(
+          child: Image.asset(
+            politician.currentFaceImage,
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          ),
+        ),
         title: Text(politician.name, style: AppTheme.glossyTextStyle(color: Colors.black87, fontSize: 18)),
-        subtitle: Text('レアリティ: ${politician.rarity.name}', style: const TextStyle(color: Colors.black54)),
-	        trailing: politician.isUnlocked
-	            ? const Icon(Icons.check_circle, color: AppTheme.primaryCyan, size: 30)
-	            : Column(
-	                mainAxisSize: MainAxisSize.min,
-	                children: [
-	                  ElevatedButton(
-	                    style: ElevatedButton.styleFrom(
-	                      backgroundColor: AppTheme.primaryCyan,
-	                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-	                    ),
-	                    onPressed: () async {
-	                      bool success = await controller.unlockPolitician(politician);
-	                      if (!success && context.mounted) {
-	                        ScaffoldMessenger.of(context).showSnackBar(
-	                          const SnackBar(content: Text('アンロック条件: 予算50 & 日本首脳Lv3')),
-	                        );
-	                      }
-	                    },
-	                    child: const Text('解放', style: TextStyle(color: Colors.white, fontSize: 12)),
-	                  ),
-	                  const Text('予算50/日Lv3', style: TextStyle(fontSize: 9, color: Colors.grey)),
-	                ],
-	              ),
-	      ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('レベル: ${politician.intimacyLevel}', style: const TextStyle(color: Colors.black54, fontSize: 12)),
+            Text('総ポイント: ${politician.politicianPoints}', style: const TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold, fontSize: 12)),
+          ],
+        ),
+        trailing: politician.isUnlocked
+            ? const Icon(Icons.check_circle, color: AppTheme.primaryCyan, size: 30)
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryCyan,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    ),
+                    onPressed: () async {
+                      bool success = await controller.unlockPolitician(politician);
+                      if (!success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('解放条件: 予算50 & 日本首脳Lv3')),
+                        );
+                      }
+                    },
+                    child: const Text('解放', style: TextStyle(color: Colors.white, fontSize: 12)),
+                  ),
+                  const Text('予算50/日Lv3', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                ],
+              ),
+      ),
     );
   }
 }
@@ -156,6 +183,10 @@ class ItemScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text('アイテム', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
           backgroundColor: AppTheme.lightCyan,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+            onPressed: () => Navigator.pop(context),
+          ),
           bottom: const TabBar(
             indicatorColor: AppTheme.primaryCyan,
             labelColor: AppTheme.primaryCyan,
@@ -211,7 +242,6 @@ class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin
       _result = res;
     });
 
-    // 数秒後に結果を消す
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) setState(() => _result = null);
     });
@@ -231,7 +261,7 @@ class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin
                 child: Image.asset('assets/images/gacha_body.png', width: 250),
               ),
               const SizedBox(height: 40),
-              Text('予算: ${controller.user?.budgetCoins.toStringAsFixed(0)}', style: AppTheme.glossyTextStyle(color: Colors.black87)),
+              Text('国家予算: ${controller.user?.budgetCoins.toStringAsFixed(0)}', style: AppTheme.glossyTextStyle(color: Colors.black87)),
               const SizedBox(height: 20),
               GlossyButton(label: 'ガチャを引く (100)', onTap: _playGacha),
             ],
@@ -253,13 +283,15 @@ class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin
             if (isWin) ...[
               Image.asset('assets/images/item_generic.png', width: 200),
               const SizedBox(height: 20),
-              Text('NEW ITEM!', style: AppTheme.glossyTextStyle(fontSize: 32)),
-              Text(_result!.name, style: AppTheme.glossyTextStyle(fontSize: 24)),
+              Text('政策採択!', style: AppTheme.glossyTextStyle(fontSize: 32, color: Colors.white)),
+              Text(_result!.name, style: AppTheme.glossyTextStyle(fontSize: 24, color: AppTheme.lightCyan)),
+              const SizedBox(height: 10),
+              Text('タップ効率が上昇しました', style: const TextStyle(color: Colors.white70)),
             ] else ...[
               Image.asset('assets/images/coin.png', width: 150),
               const SizedBox(height: 20),
-              Text('残念...', style: AppTheme.glossyTextStyle(fontSize: 32)),
-              Text('50コイン返却', style: AppTheme.glossyTextStyle(fontSize: 24)),
+              Text('不採択...', style: AppTheme.glossyTextStyle(fontSize: 32, color: Colors.white)),
+              Text('予算50ポイント返却', style: AppTheme.glossyTextStyle(fontSize: 24, color: Colors.orangeAccent)),
             ],
           ],
         ),
@@ -303,6 +335,10 @@ class MyPoliticiansScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('マイ政治家', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: AppTheme.lightCyan,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -313,12 +349,22 @@ class MyPoliticiansScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: AppTheme.glossyDecoration(color: Colors.white),
             child: ListTile(
-	              leading: Image.asset(
-	                p.faceImages.isNotEmpty ? p.faceImages.first : 'assets/images/pol_jp_leader.png',
-	                width: 50,
-	              ),
+              leading: ClipOval(
+                child: Image.asset(
+                  p.currentFaceImage,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+              ),
               title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('累計タップ: ${p.politicianTaps}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('レベル: ${p.intimacyLevel}', style: const TextStyle(fontSize: 12)),
+                  Text('総ポイント: ${p.politicianPoints}', style: const TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold, fontSize: 12)),
+                ],
+              ),
               onTap: () {
                 context.read<GameController>().selectPolitician(p);
                 Navigator.pop(context);
