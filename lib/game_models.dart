@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-enum Rarity { low, medium, high }
+enum Rarity { low, medium, high, boss }
 
 class UserProfile {
   String name;
@@ -60,6 +60,8 @@ class Politician {
   int politicianTaps;
   int intimacyLevel;
   final List<String> faceImages;
+  final int tier;
+  final List<String> requiredPoliticianIds;
 
   Politician({
     required this.id,
@@ -71,6 +73,8 @@ class Politician {
     this.politicianTaps = 0,
     this.intimacyLevel = 1,
     required this.faceImages,
+    this.tier = 0,
+    this.requiredPoliticianIds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -83,6 +87,8 @@ class Politician {
     'politicianTaps': politicianTaps,
     'intimacyLevel': intimacyLevel,
     'faceImages': faceImages,
+    'tier': tier,
+    'requiredPoliticianIds': requiredPoliticianIds,
   };
 
   factory Politician.fromJson(Map<String, dynamic> json) => Politician(
@@ -95,6 +101,8 @@ class Politician {
     politicianTaps: json['politicianTaps'] ?? 0,
     intimacyLevel: json['intimacyLevel'] ?? 1,
     faceImages: List<String>.from(json['faceImages'] ?? []),
+    tier: json['tier'] ?? 0,
+    requiredPoliticianIds: List<String>.from(json['requiredPoliticianIds'] ?? []),
   );
 }
 
