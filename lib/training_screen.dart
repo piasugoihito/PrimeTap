@@ -1,225 +1,163 @@
+import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
-import 'game_models.dart';
-import 'game_screens.dart';
+import 'punipuni_painter.dart';
 import 'theme.dart';
+import 'game_screens.dart';
 
-class TrainingScreen extends StatefulWidget {
-  const TrainingScreen({super.key});
-
+class TrainingScreen extends StatefulWidget { const TrainingScreen({super.key});
   @override
-  State<TrainingScreen> createState() => _TrainingScreenState();
+  _TrainingScreenState createState() => _TrainingScreenState();
 }
 
-class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
+class _TrainingScreenState extends State<TrainingScreen> with TickerProviderStateMixin {
+  late AnimationController _puniController;
+  Offset? _tapPosition;
+  bool _isTouching = false;
+  ui.Image? _cachedImage;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+    _puniController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+      duration: Duration(milliseconds: 500),
     );
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _puniController.dispose();
     super.dispose();
   }
 
-  void _onTap() {
-    _animationController.forward().then((_) => _animationController.reverse());
-    context.read<GameController>().handleTap();
+  Future<void> _loadImage(String path) async {
+    final completer = Completer<ui.Image>();
+    final image = AssetImage(path);
+    final stream = image.resolve(ImageConfiguration.empty);
+    stream.addListener(ImageStreamListener((info, _) {
+      completer.complete(info.image);
+    }));
+    _cachedImage = await completer.future;
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<GameController>();
-    final politician = controller.selectedPolitician;
-    final user = controller.user;
+    final controller = Provider.of<GameController>(context);
+    final pol = controller.activePolitician;
 
-    if (politician == null || user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (pol != null && _cachedImage == null) {
+      _loadImage(pol.faceImages[0]);
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.lightCyan,
-      appBar: AppBar(
-        title: Text('育成', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: AppTheme.glossyDecoration(color: Colors.white, borderRadius: 15),
-                child: Row(
-                  children: [
-                    Image.asset('assets/images/coin.png', width: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      user.budgetCoins.toStringAsFixed(0),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-                    ),
-                  ],
+      backgroundColor: AppTheme.backgroundBlue,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(controller),
+            Expanded(
+              child: Center(
+                child: GestureDetector(
+                  onPanDown: (details) {
+                    setState(() {
+                      _tapPosition = details.localPosition;
+                      _isTouching = true;
+                    });
+                    _puniController.forward(from: 0.0);
+                    controller.handleTap(details.globalPosition);
+                  },
+                  onPanEnd: (_) {
+                    setState(() {
+                      _isTouching = false;
+                    });
+                    _puniController.animateTo(1.0, curve: Curves.elasticOut);
+                  },
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    child: _cachedImage == null
+                        ? CircularProgressIndicator()
+                        : AnimatedBuilder(
+                            animation: _puniController,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                painter: PuniPuniPainter(
+                                  image: _cachedImage!,
+                                  tapPosition: _tapPosition,
+                                  deformation: _puniController.value,
+                                  isTouching: _isTouching,
+                                ),
+                              );
+                            },
+                          ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            _buildBottomMenu(context),
+          ],
+        ),
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildHeader(GameController controller) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(height: 20),
-          Text(
-            politician.name,
-            style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 10, showShadow: false),
-            child: Text('Lv.${politician.intimacyLevel}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: _onTap,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 発光エフェクト
-                  Container(
-                    width: 280,
-                    height: 280,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryCyan.withValues(alpha: 0.5),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // キャラクター画像（テカテカ感）
-                  Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: Colors.white, width: 5),
-                      image: DecorationImage(
-                        image: AssetImage(
-                          politician.id.contains('jp') ? 'assets/images/pol_jp_01_lv1.png' : 'assets/images/pol_usa_01_lv1.png',
-                        ),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  // 鏡面反射オーバーレイ
-                  IgnorePointer(
-                    child: Container(
-                      width: 250,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.4),
-                            Colors.white.withValues(alpha: 0.0),
-                            Colors.black.withValues(alpha: 0.05),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          TekaTekaContainer(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              '予算: ${controller.user?.budgetCoins.toInt()} 🪙',
+              style: AppTheme.bodyStyle.copyWith(color: Colors.white),
             ),
           ),
-          const SizedBox(height: 30),
-          Text(
-            '累計タップ: ${politician.politicianTaps}',
-            style: AppTheme.glossyTextStyle(fontSize: 20, color: Colors.cyan[800]!),
+          TekaTekaContainer(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'ポイント: ${controller.activePolitician?.politicianTaps.toInt()}',
+              style: AppTheme.bodyStyle.copyWith(color: Colors.white),
+            ),
           ),
-          const Spacer(),
-          _BottomMenu(),
         ],
       ),
     );
   }
-}
 
-class _BottomMenu extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildBottomMenu(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, -5))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _MenuIcon(
-            icon: Icons.map,
-            label: '世界地図',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldMapScreen())),
-          ),
-          _MenuIcon(
-            icon: Icons.people,
-            label: 'マイ政治家',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPoliticiansScreen())),
-          ),
-          _MenuIcon(
-            icon: Icons.inventory,
-            label: 'アイテム',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ItemScreen())),
-          ),
+          _menuIcon(Icons.map, '世界地図', () => Navigator.push(context, MaterialPageRoute(builder: (_) => WorldMapScreen()))),
+          _menuIcon(Icons.people, 'マイ政治家', () => Navigator.push(context, MaterialPageRoute(builder: (_) => MyPoliticiansScreen()))),
+          _menuIcon(Icons.shopping_bag, 'アイテム', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ItemScreen()))),
         ],
       ),
     );
   }
-}
 
-class _MenuIcon extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _MenuIcon({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget _menuIcon(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: AppTheme.glossyDecoration(color: AppTheme.lightCyan, borderRadius: 15, showShadow: false),
-            child: Icon(icon, color: AppTheme.deepCyan, size: 28),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: AppTheme.deepCyan, fontSize: 12, fontWeight: FontWeight.bold)),
+          Icon(icon, color: AppTheme.primaryCyan, size: 30),
+          SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );

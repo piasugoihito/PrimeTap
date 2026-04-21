@@ -1,52 +1,48 @@
 import 'dart:convert';
 
-enum Rarity { low, medium, high }
+enum Rarity { low, medium, high, boss }
 
 class UserProfile {
   String name;
   String homeCountry;
-  List<String> unlockedPoliticianIds;
   int totalTaps;
-  int totalPoints;
-  double maxTapSpeed;
-  double tapEfficiency;
-  int luckLevel;
+  double totalPoints;
   double budgetCoins;
+  double tapEfficiency;
+  double luckLevel;
+  double maxTapSpeed;
 
   UserProfile({
-    required this.name,
-    required this.homeCountry,
-    this.unlockedPoliticianIds = const [],
+    this.name = 'User',
+    this.homeCountry = '日本',
     this.totalTaps = 0,
     this.totalPoints = 0,
-    this.maxTapSpeed = 0.0,
+    this.budgetCoins = 0,
     this.tapEfficiency = 1.0,
-    this.luckLevel = 1,
-    this.budgetCoins = 0.0,
+    this.luckLevel = 1.0,
+    this.maxTapSpeed = 0.0,
   });
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'homeCountry': homeCountry,
-    'unlockedPoliticianIds': unlockedPoliticianIds,
     'totalTaps': totalTaps,
     'totalPoints': totalPoints,
-    'maxTapSpeed': maxTapSpeed,
+    'budgetCoins': budgetCoins,
     'tapEfficiency': tapEfficiency,
     'luckLevel': luckLevel,
-    'budgetCoins': budgetCoins,
+    'maxTapSpeed': maxTapSpeed,
   };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-    name: json['name'],
-    homeCountry: json['homeCountry'],
-    unlockedPoliticianIds: List<String>.from(json['unlockedPoliticianIds'] ?? []),
+    name: json['name'] ?? 'User',
+    homeCountry: json['homeCountry'] ?? '日本',
     totalTaps: json['totalTaps'] ?? 0,
-    totalPoints: json['totalPoints'] ?? 0,
-    maxTapSpeed: (json['maxTapSpeed'] ?? 0.0).toDouble(),
+    totalPoints: (json['totalPoints'] ?? 0).toDouble(),
+    budgetCoins: (json['budgetCoins'] ?? 0).toDouble(),
     tapEfficiency: (json['tapEfficiency'] ?? 1.0).toDouble(),
-    luckLevel: json['luckLevel'] ?? 1,
-    budgetCoins: (json['budgetCoins'] ?? 0.0).toDouble(),
+    luckLevel: (json['luckLevel'] ?? 1.0).toDouble(),
+    maxTapSpeed: (json['maxTapSpeed'] ?? 0.0).toDouble(),
   );
 }
 
@@ -57,9 +53,11 @@ class Politician {
   final Rarity rarity;
   final double odds;
   bool isUnlocked;
-  int politicianTaps;
   int intimacyLevel;
+  double politicianTaps;
   final List<String> faceImages;
+  final int tier; // 0: Initial, 1: Home Boss, 2: Neighbors, 3: Global, 4: Final
+  final List<String> requiredPoliticianIds; // Unlock conditions
 
   Politician({
     required this.id,
@@ -68,9 +66,11 @@ class Politician {
     required this.rarity,
     required this.odds,
     this.isUnlocked = false,
-    this.politicianTaps = 0,
     this.intimacyLevel = 1,
+    this.politicianTaps = 0,
     required this.faceImages,
+    this.tier = 0,
+    this.requiredPoliticianIds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -80,9 +80,11 @@ class Politician {
     'rarity': rarity.index,
     'odds': odds,
     'isUnlocked': isUnlocked,
-    'politicianTaps': politicianTaps,
     'intimacyLevel': intimacyLevel,
+    'politicianTaps': politicianTaps,
     'faceImages': faceImages,
+    'tier': tier,
+    'requiredPoliticianIds': requiredPoliticianIds,
   };
 
   factory Politician.fromJson(Map<String, dynamic> json) => Politician(
@@ -90,11 +92,13 @@ class Politician {
     name: json['name'],
     country: json['country'],
     rarity: Rarity.values[json['rarity']],
-    odds: (json['odds'] ?? 1.0).toDouble(),
-    isUnlocked: json['isUnlocked'] ?? false,
-    politicianTaps: json['politicianTaps'] ?? 0,
-    intimacyLevel: json['intimacyLevel'] ?? 1,
-    faceImages: List<String>.from(json['faceImages'] ?? []),
+    odds: json['odds'].toDouble(),
+    isUnlocked: json['isUnlocked'],
+    intimacyLevel: json['intimacyLevel'],
+    politicianTaps: (json['politicianTaps'] ?? 0).toDouble(),
+    faceImages: List<String>.from(json['faceImages']),
+    tier: json['tier'] ?? 0,
+    requiredPoliticianIds: List<String>.from(json['requiredPoliticianIds'] ?? []),
   );
 }
 
@@ -125,7 +129,7 @@ class GameItem {
     id: json['id'],
     name: json['name'],
     description: json['description'],
-    efficiencyBoost: (json['efficiencyBoost'] ?? 0.0).toDouble(),
-    isOwned: json['isOwned'] ?? false,
+    efficiencyBoost: json['efficiencyBoost'].toDouble(),
+    isOwned: json['isOwned'],
   );
 }
