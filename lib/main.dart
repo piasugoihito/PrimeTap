@@ -43,7 +43,7 @@ class StartScreen extends StatelessWidget {
           // 背景画像
           Positioned.fill(
             child: Image.asset(
-              'assets/images/bg_start.png',
+              'assets/images/bg_title_start.png',
               fit: BoxFit.cover,
             ),
           ),

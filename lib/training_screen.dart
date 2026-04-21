@@ -120,12 +120,12 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
                       shape: BoxShape.circle,
                       color: Colors.white,
                       border: Border.all(color: Colors.white, width: 5),
-                      image: DecorationImage(
-                        image: AssetImage(
-                          politician.id.contains('jp') ? 'assets/images/pol_jp_01_lv1.png' : 'assets/images/pol_usa_01_lv1.png',
-                        ),
-                        fit: BoxFit.cover,
-                      ),
+	                      image: DecorationImage(
+	                        image: AssetImage(
+	                          politician.faceImages.isNotEmpty ? politician.faceImages.first : 'assets/images/pol_jp_leader.png',
+	                        ),
+	                        fit: BoxFit.cover,
+	                      ),
                     ),
                   ),
                   // 鏡面反射オーバーレイ

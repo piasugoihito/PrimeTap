@@ -106,10 +106,10 @@ class _PoliticianCard extends StatelessWidget {
         showShadow: true,
       ),
       child: ListTile(
-        leading: Image.asset(
-          politician.id.contains('jp') ? 'assets/images/pol_jp_01_lv1.png' : 'assets/images/pol_usa_01_lv1.png',
-          width: 50,
-        ),
+	        leading: Image.asset(
+	          politician.faceImages.isNotEmpty ? politician.faceImages.first : 'assets/images/pol_jp_leader.png',
+	          width: 50,
+	        ),
         title: Text(politician.name, style: AppTheme.glossyTextStyle(color: Colors.black87, fontSize: 18)),
         subtitle: Text('レアリティ: ${politician.rarity.name}', style: const TextStyle(color: Colors.black54)),
         trailing: politician.isUnlocked
@@ -292,10 +292,10 @@ class MyPoliticiansScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: AppTheme.glossyDecoration(color: Colors.white),
             child: ListTile(
-              leading: Image.asset(
-                p.id.contains('jp') ? 'assets/images/pol_jp_01_lv1.png' : 'assets/images/pol_usa_01_lv1.png',
-                width: 50,
-              ),
+	              leading: Image.asset(
+	                p.faceImages.isNotEmpty ? p.faceImages.first : 'assets/images/pol_jp_leader.png',
+	                width: 50,
+	              ),
               title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text('累計タップ: ${p.politicianTaps}'),
               onTap: () {
