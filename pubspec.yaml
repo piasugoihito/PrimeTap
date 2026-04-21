@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.9.2 <4.0.0'
+  sdk: ^3.11.5
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -38,6 +38,7 @@ dependencies:
   collection: ^1.19.1
   google_mobile_ads: ^6.0.0
   connectivity_plus: ^6.1.5
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:

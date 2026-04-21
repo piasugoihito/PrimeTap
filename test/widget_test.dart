@@ -1,14 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:merge_tap_game/game_models.dart';
+import 'package:provider/provider.dart';
+import '../lib/main.dart';
+import '../lib/game_controller.dart';
 
 void main() {
-  test('初期ゲーム状態が想定どおり生成される', () {
-    final state = GameStateData.initial();
+  testWidgets('Splash screen shows PrimeTap text', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => GameController(),
+        child: const PrimeTapApp(),
+      ),
+    );
 
-    expect(state.totalTapCount, 0);
-    expect(state.totalTapPoints, 0);
-    expect(state.currentTapPower, 1);
-    expect(state.unlockedCharacterIds, ['slime']);
+    expect(find.text('PrimeTap'), findsOneWidget);
   });
 }

@@ -1,17 +1,26 @@
-# merge_tap_game
+# PrimeTap (Merge Tap Game)
 
-A new Flutter project.
+Flutterで完結する、軽量なマージ系タップゲームアプリです。
 
-## Getting Started
+## 特徴
+- **タップアクション**: キャラクターをタップしてポイントを獲得。インタラクティブな揺れアニメーション。
+- **成長と解放**: ポイントを貯めて新しいキャラクターを解放。キャラクターが成長する演出。
+- **強化システム**: アイテムを消費して1タップあたりのポイントをアップグレード。
+- **記録と統計**: 日次記録（タップ数、速度、ポイント）をカレンダーとグラフ（日・月・年）で可視化。
+- **完全ローカル動作**: インターネット接続なしでプレイ可能。接続時のみ下部にバナー広告を表示。
 
-This project is a starting point for a Flutter application.
+## 技術スタック
+- **Framework**: Flutter
+- **Storage**: shared_preferences (完全ローカル保存)
+- **Charts**: fl_chart
+- **Calendar**: table_calendar
+- **Ads**: google_mobile_ads (AdMob)
 
-A few resources to get you started if this is your first Flutter project:
+## 開発者向け
+詳細な仕様やファイル構成については [DELIVERABLES.md](./DELIVERABLES.md) を参照してください。
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 実行方法
+```bash
+flutter pub get
+flutter run
+```

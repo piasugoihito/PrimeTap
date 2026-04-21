@@ -1,159 +1,96 @@
+import 'dart:convert';
 import 'dart:math';
-
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'game_models.dart';
 
 class GameRepository {
-  GameRepository({SharedPreferences? preferences})
-      : _preferences = preferences;
+  static const String _userKey = 'primetap_user';
+  static const String _politiciansKey = 'primetap_politicians';
+  static const String _itemsKey = 'primetap_items';
 
-  static const _stateKey = 'merge_tap_game_state_v1';
-  static const _itemDropEveryTaps = 12;
-  SharedPreferences? _preferences;
-
-  Future<SharedPreferences> get _prefs async {
-    _preferences ??= await SharedPreferences.getInstance();
-    return _preferences!;
+  Future<void> saveUserProfile(UserProfile user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, user.toJson());
   }
 
-  Future<GameStateData> loadState() async {
-    final prefs = await _prefs;
-    final json = prefs.getString(_stateKey);
-    if (json == null || json.isEmpty) {
-      final initial = GameStateData.initial();
-      await saveState(initial);
-      return initial;
-    }
-    return GameStateData.fromJson(json);
+  Future<UserProfile?> loadUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_userKey);
+    if (jsonStr == null) return null;
+    return UserProfile.fromJson(jsonStr);
   }
 
-  Future<void> saveState(GameStateData state) async {
-    final prefs = await _prefs;
-    await prefs.setString(_stateKey, state.toJson());
+  Future<void> savePoliticians(List<Politician> politicians) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = politicians.map((p) => p.toMap()).toList();
+    await prefs.setString(_politiciansKey, jsonEncode(list));
   }
 
-  Future<GameStateData> registerTap({
-    required GameStateData currentState,
-    required double tapsPerSecond,
-  }) async {
-    final nextPoints = currentState.totalTapPoints + currentState.currentTapPower;
-    final nextTapCount = currentState.totalTapCount + 1;
-    final nextUnlocked = _computeUnlockedCharacterIds(nextPoints);
-    final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  Future<List<Politician>> loadPoliticians() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_politiciansKey);
+    if (jsonStr == null) return _getDefaultPoliticians();
+    final List<dynamic> list = jsonDecode(jsonStr);
+    return list.map((m) => Politician.fromMap(Map<String, dynamic>.from(m))).toList();
+  }
 
-    final dropProgress = currentState.upgradeItemDropProgress + 1;
-    final earnedItems = dropProgress ~/ _itemDropEveryTaps;
-    final nextDropProgress = dropProgress % _itemDropEveryTaps;
+  Future<void> saveItems(List<GameItem> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = items.map((i) => i.toMap()).toList();
+    await prefs.setString(_itemsKey, jsonEncode(list));
+  }
 
-    final updatedRecords = _upsertDailyRecord(
-      records: currentState.dailyRecords,
-      dateKey: todayKey,
-      tapCountDelta: 1,
-      tapPointDelta: currentState.currentTapPower,
-      tapsPerSecond: tapsPerSecond,
-    );
+  Future<List<GameItem>> loadItems() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_itemsKey);
+    if (jsonStr == null) return _getDefaultItems();
+    final List<dynamic> list = jsonDecode(jsonStr);
+    return list.map((m) => GameItem.fromMap(Map<String, dynamic>.from(m))).toList();
+  }
 
-    final nextState = currentState.copyWith(
-      totalTapCount: nextTapCount,
-      totalTapPoints: nextPoints,
-      upgradeItemCount: currentState.upgradeItemCount + earnedItems,
-      totalUpgradeItemsCollected:
-          currentState.totalUpgradeItemsCollected + earnedItems,
-      upgradeItemDropProgress: nextDropProgress,
-      unlockedCharacterIds: nextUnlocked,
-      selectedCharacterId: _resolveSelectedCharacterId(
-        currentState.selectedCharacterId,
-        nextUnlocked,
+  List<Politician> _getDefaultPoliticians() {
+    return [
+      Politician(
+        id: 'jp_politician_1',
+        name: '田中 太郎',
+        country: '日本',
+        rarity: Rarity.low,
+        odds: 1.2,
+        isUnlocked: true,
+        faceImages: ['assets/images/jp_1_lv1.png', 'assets/images/jp_1_lv2.png', 'assets/images/jp_1_lv3.png'],
       ),
-      dailyRecords: updatedRecords,
-    );
-
-    await saveState(nextState);
-    return nextState;
+      Politician(
+        id: 'us_politician_1',
+        name: 'John Smith',
+        country: 'アメリカ',
+        rarity: Rarity.medium,
+        odds: 2.5,
+        faceImages: ['assets/images/us_1_lv1.png', 'assets/images/us_1_lv2.png', 'assets/images/us_1_lv3.png'],
+      ),
+    ];
   }
 
-  Future<GameStateData> purchaseUpgrade(GameStateData currentState) async {
-    if (currentState.upgradeItemCount < currentState.upgradeItemCost) {
-      return currentState;
-    }
-
-    final nextState = currentState.copyWith(
-      currentTapPower: currentState.currentTapPower + 1,
-      upgradeLevel: currentState.upgradeLevel + 1,
-      upgradeItemCount:
-          currentState.upgradeItemCount - currentState.upgradeItemCost,
-      upgradeItemCost: _nextUpgradeCost(currentState.upgradeLevel + 1),
-    );
-
-    await saveState(nextState);
-    return nextState;
-  }
-
-  Future<GameStateData> selectCharacter({
-    required GameStateData currentState,
-    required String characterId,
-  }) async {
-    if (!currentState.unlockedCharacterIds.contains(characterId)) {
-      return currentState;
-    }
-
-    final nextState = currentState.copyWith(selectedCharacterId: characterId);
-    await saveState(nextState);
-    return nextState;
-  }
-
-  int _nextUpgradeCost(int nextLevel) {
-    return 3 + (pow(nextLevel + 1, 1.7) * 1.5).round();
-  }
-
-  List<String> _computeUnlockedCharacterIds(int totalTapPoints) {
-    return defaultCharacters
-        .where((character) => totalTapPoints >= character.unlockTapPoints)
-        .map((character) => character.id)
-        .toList();
-  }
-
-  String _resolveSelectedCharacterId(
-    String selectedCharacterId,
-    List<String> unlockedIds,
-  ) {
-    if (unlockedIds.contains(selectedCharacterId)) {
-      return selectedCharacterId;
-    }
-    return unlockedIds.isNotEmpty ? unlockedIds.last : defaultCharacters.first.id;
-  }
-
-  List<DailyTapRecord> _upsertDailyRecord({
-    required List<DailyTapRecord> records,
-    required String dateKey,
-    required int tapCountDelta,
-    required int tapPointDelta,
-    required double tapsPerSecond,
-  }) {
-    final copied = List<DailyTapRecord>.from(records);
-    final index = copied.indexWhere((record) => record.dateKey == dateKey);
-
-    if (index == -1) {
-      copied.add(
-        DailyTapRecord(
-          dateKey: dateKey,
-          tapCount: tapCountDelta,
-          highestTapsPerSecond: tapsPerSecond,
-          tapPoints: tapPointDelta,
-        ),
+  List<GameItem> _getDefaultItems() {
+    return List.generate(100, (index) {
+      return GameItem(
+        itemId: 'item_$index',
+        name: '政策パッケージ $index',
+        country: index % 2 == 0 ? '日本' : 'アメリカ',
+        efficiencyBoost: 0.05 * (index % 5 + 1),
+        dropRate: 0.01,
       );
-      copied.sort((a, b) => a.dateKey.compareTo(b.dateKey));
-      return copied;
-    }
+    });
+  }
 
-    final current = copied[index];
-    copied[index] = current.copyWith(
-      tapCount: current.tapCount + tapCountDelta,
-      tapPoints: current.tapPoints + tapPointDelta,
-      highestTapsPerSecond: max(current.highestTapsPerSecond, tapsPerSecond),
-    );
-    return copied;
+  Future<GameItem?> performGacha(UserProfile user, List<GameItem> allItems) async {
+    final unownedItems = allItems.where((i) => !i.isOwned).toList();
+    if (unownedItems.isEmpty) return null;
+
+    final random = Random();
+    if (random.nextDouble() < 0.3) {
+      final item = unownedItems[random.nextInt(unownedItems.length)];
+      return item;
+    }
+    return null;
   }
 }
