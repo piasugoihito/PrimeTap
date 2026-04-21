@@ -75,6 +75,7 @@ class GameController extends ChangeNotifier {
       case Rarity.low: baseCost = 500; break;
       case Rarity.medium: baseCost = 2000; break;
       case Rarity.high: baseCost = 10000; break;
+      case Rarity.boss: baseCost = 50000; break;
     }
     
     // 国家戦略: 特定の政治家は安価 (例: 各国の最初の政治家)
