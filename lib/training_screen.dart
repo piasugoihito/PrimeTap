@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
+import 'game_models.dart';
 import 'game_screens.dart';
+import 'theme.dart';
 
 class TrainingScreen extends StatefulWidget {
   const TrainingScreen({super.key});
@@ -48,16 +50,28 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
     }
 
     return Scaffold(
+      backgroundColor: AppTheme.lightCyan,
       appBar: AppBar(
-        title: const Text('育成'),
-        backgroundColor: Colors.cyan[100],
+        title: Text('育成', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
-              child: Text(
-                '予算: ${user.budgetCoins.toStringAsFixed(0)} コイン',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: AppTheme.glossyDecoration(color: Colors.white, borderRadius: 15),
+                child: Row(
+                  children: [
+                    Image.asset('assets/images/coin.png', width: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      user.budgetCoins.toStringAsFixed(0),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -67,42 +81,81 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
         children: [
           const SizedBox(height: 20),
           Text(
-            '${politician.name} (Lv.${politician.intimacyLevel})',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.cyan[900]),
+            politician.name,
+            style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
           ),
-          Text('所属: ${politician.country}'),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 10, showShadow: false),
+            child: Text('Lv.${politician.intimacyLevel}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
           const Spacer(),
           GestureDetector(
             onTap: _onTap,
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.cyan.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // 発光エフェクト
+                  Container(
+                    width: 280,
+                    height: 280,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryCyan.withValues(alpha: 0.5),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    _getPoliticianEmoji(politician.id),
-                    style: const TextStyle(fontSize: 120),
                   ),
-                ),
+                  // キャラクター画像（テカテカ感）
+                  Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      border: Border.all(color: Colors.white, width: 5),
+                      image: DecorationImage(
+                        image: AssetImage(
+                          politician.id.contains('jp') ? 'assets/images/pol_jp_01_lv1.png' : 'assets/images/pol_usa_01_lv1.png',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  // 鏡面反射オーバーレイ
+                  IgnorePointer(
+                    child: Container(
+                      width: 250,
+                      height: 250,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.4),
+                            Colors.white.withValues(alpha: 0.0),
+                            Colors.black.withValues(alpha: 0.05),
+                          ],
+                          stops: const [0.0, 0.5, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           Text(
             '累計タップ: ${politician.politicianTaps}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: AppTheme.glossyTextStyle(fontSize: 20, color: Colors.cyan[800]!),
           ),
           const Spacer(),
           _BottomMenu(),
@@ -110,22 +163,17 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
       ),
     );
   }
-
-  String _getPoliticianEmoji(String id) {
-    if (id.contains('jp')) return '🇯🇵';
-    if (id.contains('us')) return '🇺🇸';
-    return '👤';
-  }
 }
 
 class _BottomMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, -5))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -165,8 +213,13 @@ class _MenuIcon extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.cyan[700]),
-          Text(label, style: TextStyle(color: Colors.cyan[700], fontSize: 12)),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: AppTheme.glossyDecoration(color: AppTheme.lightCyan, borderRadius: 15, showShadow: false),
+            child: Icon(icon, color: AppTheme.deepCyan, size: 28),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(color: AppTheme.deepCyan, fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );

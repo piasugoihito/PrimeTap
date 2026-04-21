@@ -1,137 +1,113 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'game_models.dart';
 import 'game_repository.dart';
 
 class GameController extends ChangeNotifier {
   final GameRepository _repository = GameRepository();
+  
+  UserProfile? user;
+  List<Politician> politicians = [];
+  List<GameItem> items = [];
+  Politician? selectedPolitician;
 
-  UserProfile? _user;
-  List<Politician> _politicians = [];
-  List<GameItem> _items = [];
-  Politician? _selectedPolitician;
-
-  UserProfile? get user => _user;
-  List<Politician> get politicians => _politicians;
-  List<GameItem> get items => _items;
-  Politician? get selectedPolitician => _selectedPolitician;
-
-  bool _isLoading = true;
-  bool get isLoading => _isLoading;
-
-  Future<void> initialize() async {
-    _isLoading = true;
-    notifyListeners();
-
-    _user = await _repository.loadUserProfile();
-    _politicians = await _repository.loadPoliticians();
-    _items = await _repository.loadItems();
-
-    if (_user == null) {
-      // 初回起動時の初期化はUI側で行う（名前・国家選択）
-    } else {
-      // 最後に選択していた政治家をセット（簡易的に最初の解放済み政治家）
-      _selectedPolitician = _politicians.firstWhere((p) => p.isUnlocked);
-    }
-
-    _isLoading = false;
-    notifyListeners();
+  GameController() {
+    _init();
   }
 
-  Future<void> createUser(String name, String country) async {
-    final initialPolitician = _politicians.firstWhere((p) => p.country == country && p.rarity == Rarity.low);
-    _user = UserProfile(
-      name: name,
-      homeCountry: country,
-      unlockedPoliticianIds: [initialPolitician.id],
-      totalTaps: 0,
-      totalPoints: 0,
-      maxTapSpeed: 0.0,
-      tapEfficiency: 1.0,
-      luckLevel: 1,
-      budgetCoins: 0.0,
-    );
-    _selectedPolitician = initialPolitician;
-    await _repository.saveUserProfile(_user!);
+  Future<void> _init() async {
+    user = await _repository.loadUserProfile();
+    if (user == null) {
+      user = UserProfile(name: '新人プレイヤー', homeCountry: '日本');
+      await _repository.saveUserProfile(user!);
+    }
+    
+    politicians = await _repository.loadPoliticians();
+    items = await _repository.loadItems();
+    
+    // 初期選択
+    selectedPolitician = politicians.firstWhere((p) => p.isUnlocked, orElse: () => politicians.first);
     notifyListeners();
   }
 
   void handleTap() {
-    if (_user == null || _selectedPolitician == null) return;
-
-    final pointsEarned = (1 * _user!.tapEfficiency).toInt();
-    final newTotalTaps = _user!.totalTaps + 1;
-    final newTotalPoints = _user!.totalPoints + pointsEarned;
+    if (user == null || selectedPolitician == null) return;
     
-    // 政治家の個別タップ数とレベルアップ
-    final updatedPoliticianTaps = _selectedPolitician!.politicianTaps + 1;
-    int newIntimacyLevel = _selectedPolitician!.intimacyLevel;
-    if (updatedPoliticianTaps >= 400 && newIntimacyLevel < 3) {
-      newIntimacyLevel = 3;
-    } else if (updatedPoliticianTaps >= 200 && newIntimacyLevel < 2) {
-      newIntimacyLevel = 2;
+    user!.totalTaps++;
+    double points = 1.0 * user!.tapEfficiency;
+    user!.totalPoints += points.toInt();
+    selectedPolitician!.politicianTaps++;
+    
+    // コイン計算: 政治家のオッズ × タップポイント
+    double earnedCoins = points * selectedPolitician!.odds;
+    user!.budgetCoins += earnedCoins;
+
+    // 親密度レベルアップ (1->2: 1000 taps, 2->3: 5000 taps)
+    if (selectedPolitician!.intimacyLevel == 1 && selectedPolitician!.politicianTaps >= 1000) {
+      selectedPolitician!.intimacyLevel = 2;
+    } else if (selectedPolitician!.intimacyLevel == 2 && selectedPolitician!.politicianTaps >= 5000) {
+      selectedPolitician!.intimacyLevel = 3;
     }
 
-    _selectedPolitician = _selectedPolitician!.copyWith(
-      politicianTaps: updatedPoliticianTaps,
-      intimacyLevel: newIntimacyLevel,
-    );
-
-    // 政治家リストの更新
-    final index = _politicians.indexWhere((p) => p.id == _selectedPolitician!.id);
-    if (index != -1) {
-      _politicians[index] = _selectedPolitician!;
-    }
-
-    // コイン計算: 政治家のオッズ × 総タップポイント
-    final newBudgetCoins = _selectedPolitician!.odds * newTotalPoints;
-
-    _user = _user!.copyWith(
-      totalTaps: newTotalTaps,
-      totalPoints: newTotalPoints,
-      budgetCoins: newBudgetCoins,
-    );
-
-    _repository.saveUserProfile(_user!);
-    _repository.savePoliticians(_politicians);
+    _repository.saveUserProfile(user!);
+    _repository.savePoliticians(politicians);
     notifyListeners();
+  }
+
+  Future<bool> unlockPolitician(Politician p) async {
+    if (user == null || p.isUnlocked) return false;
+    
+    double cost = _getUnlockCost(p);
+    if (user!.budgetCoins >= cost) {
+      user!.budgetCoins -= cost;
+      p.isUnlocked = true;
+      await _repository.saveUserProfile(user!);
+      await _repository.savePoliticians(politicians);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  double _getUnlockCost(Politician p) {
+    // レアリティに比例
+    double baseCost = 1000;
+    switch (p.rarity) {
+      case Rarity.low: baseCost = 500; break;
+      case Rarity.medium: baseCost = 2000; break;
+      case Rarity.high: baseCost = 10000; break;
+    }
+    
+    // 国家戦略: 特定の政治家は安価 (例: 各国の最初の政治家)
+    if (p.id.endsWith('_01')) {
+      baseCost *= 0.5;
+    }
+    return baseCost;
+  }
+
+  void selectPolitician(Politician p) {
+    if (p.isUnlocked) {
+      selectedPolitician = p;
+      notifyListeners();
+    }
   }
 
   Future<GameItem?> tryGacha() async {
-    if (_user == null) return null;
+    if (user == null || user!.budgetCoins < 100) return null;
     
-    const gachaCost = 100.0; // 仮のコスト
-    if (_user!.budgetCoins < gachaCost) return null;
-
-    final result = await _repository.performGacha(_user!, _items);
+    user!.budgetCoins -= 100;
+    final result = await _repository.performGacha(user!, items);
     
     if (result != null) {
-      // 当たり
-      final itemIndex = _items.indexWhere((i) => i.itemId == result.itemId);
-      if (itemIndex != -1) {
-        _items[itemIndex] = _items[itemIndex].copyWith(isOwned: true);
-        _user = _user!.copyWith(
-          tapEfficiency: _user!.tapEfficiency + result.efficiencyBoost,
-          budgetCoins: _user!.budgetCoins - gachaCost,
-        );
-      }
+      result.isOwned = true;
+      user!.tapEfficiency += result.efficiencyBoost;
+      await _repository.saveItems(items);
     } else {
       // 外れ: 半分返却
-      _user = _user!.copyWith(
-        budgetCoins: _user!.budgetCoins - (gachaCost / 2),
-      );
+      user!.budgetCoins += 50;
     }
-
-    await _repository.saveUserProfile(_user!);
-    await _repository.saveItems(_items);
+    
+    await _repository.saveUserProfile(user!);
     notifyListeners();
     return result;
-  }
-
-  void selectPolitician(Politician politician) {
-    if (politician.isUnlocked) {
-      _selectedPolitician = politician;
-      notifyListeners();
-    }
   }
 }

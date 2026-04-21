@@ -1,95 +1,92 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'game_models.dart';
 
 class GameRepository {
-  static const String _userKey = 'primetap_user';
-  static const String _politiciansKey = 'primetap_politicians';
-  static const String _itemsKey = 'primetap_items';
+  static const String _userKey = 'user_profile';
+  static const String _politiciansKey = 'politicians_list';
+  static const String _itemsKey = 'items_list';
 
   Future<void> saveUserProfile(UserProfile user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, user.toJson());
+    await prefs.setString(_userKey, jsonEncode(user.toJson()));
   }
 
   Future<UserProfile?> loadUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_userKey);
-    if (jsonStr == null) return null;
-    return UserProfile.fromJson(jsonStr);
+    final data = prefs.getString(_userKey);
+    if (data == null) return null;
+    return UserProfile.fromJson(jsonDecode(data));
   }
 
-  Future<void> savePoliticians(List<Politician> politicians) async {
+  Future<void> savePoliticians(List<Politician> list) async {
     final prefs = await SharedPreferences.getInstance();
-    final list = politicians.map((p) => p.toMap()).toList();
-    await prefs.setString(_politiciansKey, jsonEncode(list));
+    final data = list.map((p) => p.toJson()).toList();
+    await prefs.setString(_politiciansKey, jsonEncode(data));
   }
 
   Future<List<Politician>> loadPoliticians() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_politiciansKey);
-    if (jsonStr == null) return _getDefaultPoliticians();
-    final List<dynamic> list = jsonDecode(jsonStr);
-    return list.map((m) => Politician.fromMap(Map<String, dynamic>.from(m))).toList();
+    final data = prefs.getString(_politiciansKey);
+    if (data == null) return _generateInitialPoliticians();
+    final List<dynamic> list = jsonDecode(data);
+    return list.map((p) => Politician.fromJson(p)).toList();
   }
 
-  Future<void> saveItems(List<GameItem> items) async {
+  Future<void> saveItems(List<GameItem> list) async {
     final prefs = await SharedPreferences.getInstance();
-    final list = items.map((i) => i.toMap()).toList();
-    await prefs.setString(_itemsKey, jsonEncode(list));
+    final data = list.map((i) => i.toJson()).toList();
+    await prefs.setString(_itemsKey, jsonEncode(data));
   }
 
   Future<List<GameItem>> loadItems() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_itemsKey);
-    if (jsonStr == null) return _getDefaultItems();
-    final List<dynamic> list = jsonDecode(jsonStr);
-    return list.map((m) => GameItem.fromMap(Map<String, dynamic>.from(m))).toList();
+    final data = prefs.getString(_itemsKey);
+    if (data == null) return _generateInitialItems();
+    final List<dynamic> list = jsonDecode(data);
+    return list.map((i) => GameItem.fromJson(i)).toList();
   }
 
-  List<Politician> _getDefaultPoliticians() {
+  List<Politician> _generateInitialPoliticians() {
     return [
       Politician(
-        id: 'jp_politician_1',
-        name: '田中 太郎',
+        id: 'jp_01',
+        name: 'タナカ',
         country: '日本',
         rarity: Rarity.low,
         odds: 1.2,
         isUnlocked: true,
-        faceImages: ['assets/images/jp_1_lv1.png', 'assets/images/jp_1_lv2.png', 'assets/images/jp_1_lv3.png'],
+        faceImages: ['assets/images/pol_jp_01_lv1.png'],
       ),
       Politician(
-        id: 'us_politician_1',
-        name: 'John Smith',
+        id: 'usa_01',
+        name: 'スミス',
         country: 'アメリカ',
         rarity: Rarity.medium,
         odds: 2.5,
-        faceImages: ['assets/images/us_1_lv1.png', 'assets/images/us_1_lv2.png', 'assets/images/us_1_lv3.png'],
+        faceImages: ['assets/images/pol_usa_01_lv1.png'],
       ),
     ];
   }
 
-  List<GameItem> _getDefaultItems() {
-    return List.generate(100, (index) {
-      return GameItem(
-        itemId: 'item_$index',
-        name: '政策パッケージ $index',
-        country: index % 2 == 0 ? '日本' : 'アメリカ',
-        efficiencyBoost: 0.05 * (index % 5 + 1),
-        dropRate: 0.01,
-      );
-    });
+  List<GameItem> _generateInitialItems() {
+    return List.generate(100, (index) => GameItem(
+      id: 'item_${index.toString().padLeft(3, '0')}',
+      name: 'アイテム ${index + 1}',
+      description: 'タップ効率が上昇するアイテムです。',
+      efficiencyBoost: 0.05,
+    ));
   }
 
   Future<GameItem?> performGacha(UserProfile user, List<GameItem> allItems) async {
     final unownedItems = allItems.where((i) => !i.isOwned).toList();
     if (unownedItems.isEmpty) return null;
-
-    final random = Random();
-    if (random.nextDouble() < 0.3) {
-      final item = unownedItems[random.nextInt(unownedItems.length)];
-      return item;
+    
+    // 10%の確率で当たり
+    final isWin = (DateTime.now().millisecond % 10) == 0;
+    if (isWin) {
+      unownedItems.shuffle();
+      return unownedItems.first;
     }
     return null;
   }
