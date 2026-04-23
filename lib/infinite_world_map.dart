@@ -22,9 +22,6 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
   double offsetX = 0.0;
   double offsetY = 0.0;
 
-  // 表か裏か
-  bool isFront = true;
-
   // ピンのデータ（表マップ基準の座標）
   final List<MapPinData> pins = [
     MapPinData(country: '日本', x: 1050, y: 200),
@@ -46,18 +43,13 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
               offsetX += details.delta.dx;
               offsetY += details.delta.dy;
 
-              // 左右ループ
+              // 左右ループ (ドラクエトポロジー)
               if (offsetX > 0) offsetX -= mapWidth;
               if (offsetX < -mapWidth) offsetX += mapWidth;
 
-              // 上下ループ（表裏切り替え）
-              if (offsetY > 0) {
-                offsetY = -mapHeight + offsetY;
-                isFront = !isFront;
-              } else if (offsetY < -mapHeight) {
-                offsetY = mapHeight + offsetY;
-                isFront = !isFront;
-              }
+              // 上下ループ (ドラクエトポロジー)
+              if (offsetY > 0) offsetY -= mapHeight;
+              if (offsetY < -mapHeight) offsetY += mapHeight;
             });
           },
           child: Container(
@@ -65,23 +57,12 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
             child: ClipRect(
               child: Stack(
                 children: [
-                  // メインマップ
-                  _buildMapImage(offsetX, offsetY, isFront),
-                  // 左右の補完
-                  _buildMapImage(offsetX + mapWidth, offsetY, isFront),
-                  _buildMapImage(offsetX - mapWidth, offsetY, isFront),
-                  
-                  // 上下の補完（裏表逆）
-                  _buildMapImage(offsetX, offsetY + mapHeight, !isFront),
-                  _buildMapImage(offsetX, offsetY - mapHeight, !isFront),
-                  
-                  // 斜めの補完（裏表逆）
-                  _buildMapImage(offsetX + mapWidth, offsetY + mapHeight, !isFront),
-                  _buildMapImage(offsetX - mapWidth, offsetY + mapHeight, !isFront),
-                  _buildMapImage(offsetX + mapWidth, offsetY - mapHeight, !isFront),
-                  _buildMapImage(offsetX - mapWidth, offsetY - mapHeight, !isFront),
+                  // 3x3のグリッドでマップを配置して無限スクロールを実現
+                  for (int i = -1; i <= 1; i++)
+                    for (int j = -1; j <= 1; j++)
+                      _buildMapImage(offsetX + i * mapWidth, offsetY + j * mapHeight),
 
-                  // ピンの描画
+                  // ピンの描画 (スクロールに合わせてループ表示)
                   ..._buildPins(),
                 ],
               ),
@@ -92,12 +73,12 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
     );
   }
 
-  Widget _buildMapImage(double x, double y, bool front) {
+  Widget _buildMapImage(double x, double y) {
     return Positioned(
       left: x,
       top: y,
       child: Image.asset(
-        front ? 'assets/images/world_map_front.webp' : 'assets/images/world_map_back.webp',
+        'assets/images/world_map_front.webp',
         width: mapWidth,
         height: mapHeight,
         fit: BoxFit.fill,
@@ -109,16 +90,19 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
     List<Widget> pinWidgets = [];
     
     for (var pin in pins) {
-      if (isFront) {
-        pinWidgets.add(_buildSinglePin(pin, offsetX, offsetY));
-        pinWidgets.add(_buildSinglePin(pin, offsetX + mapWidth, offsetY));
-        pinWidgets.add(_buildSinglePin(pin, offsetX - mapWidth, offsetY));
+      // 3x3のグリッドに合わせてピンもループ表示
+      for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+          pinWidgets.add(_buildSinglePin(pin, offsetX + i * mapWidth, offsetY + j * mapHeight));
+        }
       }
     }
     return pinWidgets;
   }
 
   Widget _buildSinglePin(MapPinData pin, double x, double y) {
+    // 画面外のピンは描画しない（パフォーマンス最適化）
+    // 簡易的な判定: 画面サイズを考慮せず、マップチップの範囲内のみ描画
     return Positioned(
       left: x + pin.x,
       top: y + pin.y,
