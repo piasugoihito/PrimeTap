@@ -4,7 +4,6 @@ import 'game_controller.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
 import 'package:provider/provider.dart';
-import 'training_screen.dart';
 import 'main_navigation.dart';
 
 class InfiniteWorldMap extends StatefulWidget {
@@ -110,18 +109,10 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
     List<Widget> pinWidgets = [];
     
     for (var pin in pins) {
-      // 表マップのピンは表に、裏マップのピンは裏に（座標は反転させる必要があるかもしれないが、一旦そのまま）
-      // 球体トポロジーでは、裏側は座標系が異なる可能性があるが、
-      // ここではシンプルに「表にのみピンがある」状態から始める
-      
       if (isFront) {
         pinWidgets.add(_buildSinglePin(pin, offsetX, offsetY));
         pinWidgets.add(_buildSinglePin(pin, offsetX + mapWidth, offsetY));
         pinWidgets.add(_buildSinglePin(pin, offsetX - mapWidth, offsetY));
-      } else {
-        // 裏側の場合は、表のピンは見えない、あるいは裏側の座標に変換して表示
-        // 今回は「表」に主要国があるため、裏側にはピンを表示しないか、
-        // あるいは裏側用の座標を定義する
       }
     }
     return pinWidgets;
@@ -207,8 +198,10 @@ class _PoliticianCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final isUnlocked = politician.isUnlocked;
-    final canUnlock = controller.userProfile.budgetCoins >= 50 && 
-                      (controller.politicians.firstWhere((p) => p.id == 'pol_jp_leader').intimacyLevel >= 3);
+    
+    // 日本首脳のレベルを確認
+    final jpLeader = controller.politicians.firstWhere((p) => p.id == 'jp_leader');
+    final canUnlock = (controller.user?.budgetCoins ?? 0) >= 50 && jpLeader.intimacyLevel >= 3;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -216,10 +209,10 @@ class _PoliticianCard extends StatelessWidget {
       elevation: 4,
       child: InkWell(
         onTap: isUnlocked ? () {
-          controller.selectPolitician(politician.id);
+          controller.selectPolitician(politician);
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+            MaterialPageRoute(builder: (_) => const MainNavigationScreen(initialIndex: 0)),
             (route) => false,
           );
         } : null,
@@ -258,7 +251,7 @@ class _PoliticianCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     if (canUnlock) {
-                      controller.unlockPolitician(politician.id);
+                      controller.unlockPolitician(politician);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('解放条件: 国家予算50 & 日本首脳Lv3')),

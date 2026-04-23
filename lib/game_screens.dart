@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'infinite_world_map.dart';
+import 'package:provider/provider.dart';
+import 'game_controller.dart';
+import 'game_models.dart';
+import 'main_navigation.dart';
+import 'audio_manager.dart';
 import 'theme.dart';
+import 'infinite_world_map.dart';
 
 class WorldMapScreen extends StatelessWidget {
   final bool isTab;
@@ -23,144 +28,8 @@ class WorldMapScreen extends StatelessWidget {
   }
 }
 
-class _CountryPin extends StatelessWidget {
-  final double top;
-  final double left;
-  final String country;
-
-  const _CountryPin({required this.top, required this.left, required this.country});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      left: left,
-      child: GestureDetector(
-        onTap: () => _showCatalog(context),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: AppTheme.glossyDecoration(color: Colors.redAccent),
-              child: const Icon(Icons.location_on, color: Colors.white, size: 30),
-            ),
-            const SizedBox(height: 4),
-            Text(country, style: AppTheme.glossyTextStyle(fontSize: 16, color: Colors.black87)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCatalog(BuildContext context) {
-    AudioManager().playSE('se_menu_open.mp3');
-    final politicians = context.read<GameController>().politicians.where((p) => p.country == country).toList();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 15),
-            Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-            const SizedBox(height: 15),
-            Text('$countryの政治家カタログ', style: AppTheme.glossyTextStyle(fontSize: 20, color: AppTheme.deepCyan)),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: politicians.length,
-                itemBuilder: (context, index) {
-                  final p = politicians[index];
-                  return _PoliticianCard(politician: p);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PoliticianCard extends StatelessWidget {
-  final Politician politician;
-  const _PoliticianCard({required this.politician});
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = context.watch<GameController>();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: AppTheme.glossyDecoration(
-        color: politician.isUnlocked ? Colors.white : Colors.grey[200]!,
-        showShadow: true,
-      ),
-      child: ListTile(
-        onTap: politician.isUnlocked 
-          ? () {
-              controller.selectPolitician(politician);
-              // 育成画面（インデックス0）へ遷移
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const MainNavigationScreen(initialIndex: 0)),
-                (route) => route.isFirst,
-              );
-            }
-          : null,
-        contentPadding: const EdgeInsets.all(12),
-        leading: ClipOval(
-          child: Image.asset(
-            politician.currentFaceImage,
-            width: 50,
-            height: 50,
-            fit: BoxFit.cover,
-          ),
-        ),
-        title: Text(politician.name, style: AppTheme.glossyTextStyle(color: Colors.black87, fontSize: 18)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('レベル: ${politician.intimacyLevel}', style: const TextStyle(color: Colors.black54, fontSize: 12)),
-            Text('総ポイント: ${politician.politicianPoints}', style: const TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold, fontSize: 12)),
-          ],
-        ),
-        trailing: politician.isUnlocked
-            ? const Icon(Icons.check_circle, color: AppTheme.primaryCyan, size: 30)
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryCyan,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    ),
-                    onPressed: () async {
-                      bool success = await controller.unlockPolitician(politician);
-                      if (!success && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('解放条件: 予算50 & 日本首脳Lv3')),
-                        );
-                      }
-                    },
-                    child: const Text('解放', style: TextStyle(color: Colors.white, fontSize: 12)),
-                  ),
-                  const Text('予算50/日Lv3', style: TextStyle(fontSize: 9, color: Colors.grey)),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
 class MyPoliticiansScreen extends StatelessWidget {
-  final bool isTab;
-  const MyPoliticiansScreen({super.key, this.isTab = false});
+  const MyPoliticiansScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -169,28 +38,86 @@ class MyPoliticiansScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('マイ政治家', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
+        title: Text('マイ政治家一覧', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: AppTheme.lightCyan,
         elevation: 0,
-        leading: isTab ? null : IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         itemCount: unlockedPoliticians.length,
         itemBuilder: (context, index) {
-          return _PoliticianCard(politician: unlockedPoliticians[index]);
+          final p = unlockedPoliticians[index];
+          return _MyPoliticianCard(politician: p);
         },
       ),
     );
   }
 }
 
-class ItemScreen extends StatelessWidget {
-  final bool isTab;
-  const ItemScreen({super.key, this.isTab = false});
+class _MyPoliticianCard extends StatelessWidget {
+  final Politician politician;
+  const _MyPoliticianCard({required this.politician});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<GameController>();
+    final isSelected = controller.selectedPolitician?.id == politician.id;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: isSelected ? const BorderSide(color: AppTheme.deepCyan, width: 2) : BorderSide.none,
+      ),
+      elevation: 4,
+      child: InkWell(
+        onTap: () {
+          controller.selectPolitician(politician);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainNavigationScreen(initialIndex: 0)),
+            (route) => false,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  politician.faceImages[0],
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(politician.name, style: AppTheme.glossyTextStyle(fontSize: 18, color: Colors.black87)),
+                    Text(politician.country, style: TextStyle(color: Colors.grey[600])),
+                    Text('Lv: ${politician.intimacyLevel} | ${politician.politicianPoints} pt', 
+                      style: const TextStyle(color: AppTheme.deepCyan, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                const Icon(Icons.check_circle, color: AppTheme.deepCyan)
+              else
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ItemsScreen extends StatelessWidget {
+  const ItemsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -200,123 +127,21 @@ class ItemScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text('アイテム', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
           backgroundColor: AppTheme.lightCyan,
-          leading: isTab ? null : IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
-            onPressed: () => Navigator.pop(context),
-          ),
-          bottom: const TabBar(
-            indicatorColor: AppTheme.primaryCyan,
-            labelColor: AppTheme.primaryCyan,
+          elevation: 0,
+          bottom: TabBar(
+            labelColor: AppTheme.deepCyan,
             unselectedLabelColor: Colors.grey,
-            tabs: [Tab(text: 'ガチャ'), Tab(text: 'コレクション')],
-          ),
-        ),
-        body: const TabBarView(children: [GachaTab(), OwnedItemsTab()]),
-      ),
-    );
-  }
-}
-
-class GachaTab extends StatefulWidget {
-  const GachaTab({super.key});
-
-  @override
-  State<GachaTab> createState() => _GachaTabState();
-}
-
-class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  bool _isSpinning = false;
-  GameItem? _result;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _playGacha() async {
-    if (_isSpinning) return;
-    final controller = context.read<GameController>();
-    if (controller.user!.budgetCoins < 100) return;
-
-    setState(() {
-      _isSpinning = true;
-      _result = null;
-    });
-
-    AudioManager().playSE('se_gacha_spinning.mp3');
-    await _controller.forward(from: 0);
-    final res = await controller.tryGacha();
-
-    if (res != null) {
-      AudioManager().playSE('se_gacha_success.mp3');
-    } else {
-      AudioManager().playSE('se_gacha_fail.mp3');
-    }
-
-    setState(() {
-      _isSpinning = false;
-      _result = res;
-    });
-
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) setState(() => _result = null);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = context.watch<GameController>();
-    return Stack(
-      children: [
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              RotationTransition(
-                turns: _controller,
-                child: Image.asset('assets/images/gacha_body.png', width: 250),
-              ),
-              const SizedBox(height: 40),
-              Text('国家予算: ${controller.user?.budgetCoins.toStringAsFixed(0)}', style: AppTheme.glossyTextStyle(color: Colors.black87)),
-              const SizedBox(height: 20),
-              GlossyButton(label: 'ガチャを引く (100)', onTap: _playGacha),
+            indicatorColor: AppTheme.deepCyan,
+            tabs: const [
+              Tab(text: 'ガチャ'),
+              Tab(text: '取得済み'),
             ],
           ),
         ),
-        if (_result != null) _buildResultOverlay(true),
-        if (!_isSpinning && _result == null && controller.user!.budgetCoins < 100) _buildResultOverlay(false),
-      ],
-    );
-  }
-
-  Widget _buildResultOverlay(bool isWin) {
-    return Container(
-      color: Colors.black54,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        body: const TabBarView(
           children: [
-            if (isWin) ...[
-              Image.asset('assets/images/item_generic.png', width: 200),
-              const SizedBox(height: 20),
-              Text('政策採択!', style: AppTheme.glossyTextStyle(fontSize: 32, color: Colors.white)),
-              Text(_result!.name, style: AppTheme.glossyTextStyle(fontSize: 24, color: AppTheme.lightCyan)),
-              const SizedBox(height: 10),
-              Text('タップ効率が上昇しました', style: const TextStyle(color: Colors.white70)),
-            ] else ...[
-              Image.asset('assets/images/coin.png', width: 150),
-              const SizedBox(height: 20),
-              Text('不採択...', style: AppTheme.glossyTextStyle(fontSize: 32, color: Colors.white)),
-              Text('予算50ポイント返却', style: AppTheme.glossyTextStyle(fontSize: 24, color: Colors.orangeAccent)),
-            ],
+            _GachaTab(),
+            _OwnedItemsTab(),
           ],
         ),
       ),
@@ -324,8 +149,8 @@ class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin
   }
 }
 
-class OwnedItemsTab extends StatelessWidget {
-  const OwnedItemsTab({super.key});
+class _OwnedItemsTab extends StatelessWidget {
+  const _OwnedItemsTab();
 
   @override
   Widget build(BuildContext context) {
@@ -333,32 +158,102 @@ class OwnedItemsTab extends StatelessWidget {
     final ownedItems = controller.items.where((i) => i.isOwned).toList();
 
     if (ownedItems.isEmpty) {
-      return const Center(child: Text('まだ政策が採択されていません', style: TextStyle(color: Colors.grey)));
+      return const Center(child: Text('まだアイテムを持っていません'));
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 0.8,
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: ownedItems.length,
       itemBuilder: (context, index) {
         final item = ownedItems[index];
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: AppTheme.glossyDecoration(color: Colors.white),
-              child: Image.asset('assets/images/item_generic.png'),
-            ),
-            const SizedBox(height: 5),
-            Text(item.name, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-          ],
+        return Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: ListTile(
+            leading: const Icon(Icons.policy, color: AppTheme.deepCyan),
+            title: Text(item.name),
+            subtitle: Text('効率UP: +${(item.efficiencyBoost * 100).toStringAsFixed(1)}%'),
+          ),
         );
       },
+    );
+  }
+}
+
+class _GachaTab extends StatefulWidget {
+  const _GachaTab();
+
+  @override
+  State<_GachaTab> createState() => _GachaTabState();
+}
+
+class _GachaTabState extends State<_GachaTab> {
+  bool _isSpinning = false;
+  GameItem? _result;
+
+  void _pullGacha() async {
+    final controller = context.read<GameController>();
+    if ((controller.user?.budgetCoins ?? 0) < 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('国家予算が足りません（100必要）')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSpinning = true;
+      _result = null;
+    });
+
+    AudioManager().playSE('se_gacha_spinning.mp3');
+    
+    final result = await controller.tryGacha();
+    
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (mounted) {
+      setState(() {
+        _isSpinning = false;
+        _result = result;
+      });
+
+      if (result != null) {
+        AudioManager().playSE('se_gacha_success.mp3');
+      } else {
+        AudioManager().playSE('se_gacha_fail.mp3');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<GameController>();
+    
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('国家予算: ${controller.user?.budgetCoins.toStringAsFixed(0) ?? 0}', 
+            style: AppTheme.glossyTextStyle(fontSize: 24, color: AppTheme.deepCyan)),
+          const SizedBox(height: 40),
+          AnimatedRotation(
+            turns: _isSpinning ? 5 : 0,
+            duration: const Duration(seconds: 2),
+            child: Image.asset('assets/images/gacha_body.png', width: 200),
+          ),
+          const SizedBox(height: 40),
+          if (!_isSpinning)
+            GlossyButton(
+              label: 'ガチャを回す (100)',
+              onTap: _pullGacha,
+            ),
+          if (_result != null) ...[
+            const SizedBox(height: 20),
+            Text('当たり！: ${_result!.name}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange)),
+          ] else if (!_isSpinning && _result == null && controller.user != null) ...[
+             // ハズレ演出はAudioManagerで音を出しているのでテキストは控えめに
+          ],
+        ],
+      ),
     );
   }
 }
