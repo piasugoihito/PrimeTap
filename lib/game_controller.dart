@@ -64,8 +64,17 @@ class GameController extends ChangeNotifier {
     user!.totalTaps++;
     selectedPolitician!.politicianTaps++;
     
-    // 2. ポイント計算: 1タップにつき 1ポイント × タップ効率
-    int points = (1 * user!.tapEfficiency).toInt();
+    // 2. ポイント計算 (仕様に基づいた計算式)
+    // タップポイント速度 = min(floor(1 * (1 + (2√5 - 1) * 総タップ回数 / 10000) * (1 + (2√5 - 1) * 政治家の総タップポイント / 1000)), 20)
+    // 2√5 - 1 ≒ 3.47213595
+    const double factor = 3.47213595;
+    double globalMultiplier = 1.0 + factor * (user!.totalTaps / 10000.0);
+    double localMultiplier = 1.0 + factor * (selectedPolitician!.politicianPoints / 1000.0);
+    
+    int points = (globalMultiplier * localMultiplier).floor();
+    if (points > 20) points = 20;
+    if (points < 1) points = 1; // 最低1ポイント
+
     user!.totalPoints += points;
     selectedPolitician!.politicianPoints += points;
     
@@ -83,6 +92,16 @@ class GameController extends ChangeNotifier {
     _repository.saveUserProfile(user!);
     _repository.savePoliticians(politicians);
     notifyListeners();
+  }
+
+  // 現在のタップポイント速度を取得するヘルパー
+  int get currentTapSpeed {
+    if (user == null || selectedPolitician == null) return 1;
+    const double factor = 3.47213595;
+    double globalMultiplier = 1.0 + factor * (user!.totalTaps / 10000.0);
+    double localMultiplier = 1.0 + factor * (selectedPolitician!.politicianPoints / 1000.0);
+    int speed = (globalMultiplier * localMultiplier).floor();
+    return speed > 20 ? 20 : (speed < 1 ? 1 : speed);
   }
 
   Future<bool> unlockPolitician(Politician p) async {

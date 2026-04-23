@@ -85,13 +85,27 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
             style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
           ),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 20, showShadow: false),
-            child: Text(
-              '親密度レベル: ${politician.intimacyLevel}', 
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 20, showShadow: false),
+                child: Text(
+                  '親密度レベル: ${politician.intimacyLevel}', 
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: AppTheme.glossyDecoration(color: Colors.orangeAccent, borderRadius: 20, showShadow: false),
+                child: Text(
+                  '速度: ${controller.currentTapSpeed}', 
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                ),
+              ),
+            ],
           ),
           const Spacer(),
           GestureDetector(
