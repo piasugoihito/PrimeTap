@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'game_models.dart';
+import 'training_screen.dart';
 import 'theme.dart';
 
 class WorldMapScreen extends StatelessWidget {
@@ -367,11 +368,10 @@ class MyPoliticiansScreen extends StatelessWidget {
               ),
               onTap: () {
                 context.read<GameController>().selectPolitician(p);
-                // スタート画面まで戻り、そこから育成画面へ遷移させる
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                Navigator.push(
-                  context,
+                // 育成画面へ遷移（現在のスタックをクリアしてTrainingScreenへ）
+                Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const TrainingScreen()),
+                  (route) => route.isFirst,
                 );
               },
             ),
