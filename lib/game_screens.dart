@@ -6,6 +6,7 @@ import 'main_navigation.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
 import 'infinite_world_map.dart';
+import 'main.dart';
 
 class WorldMapScreen extends StatelessWidget {
   final bool isTab;
@@ -21,7 +22,11 @@ class WorldMapScreen extends StatelessWidget {
         elevation: 0,
         leading: isTab ? null : IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const StartScreen()),
+            (route) => false,
+          ),
         ),
       ),
       body: const InfiniteWorldMap(),
@@ -44,6 +49,14 @@ class MyPoliticiansScreen extends StatelessWidget {
         title: Text('マイ政治家一覧', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const StartScreen()),
+            (route) => false,
+          ),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -133,6 +146,14 @@ class ItemsScreen extends StatelessWidget {
           title: Text('アイテム', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+            onPressed: () => Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const StartScreen()),
+              (route) => false,
+            ),
+          ),
           bottom: TabBar(
             labelColor: AppTheme.deepCyan,
             unselectedLabelColor: Colors.grey,

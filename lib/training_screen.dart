@@ -4,6 +4,7 @@ import 'game_controller.dart';
 import 'game_models.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
+import 'main.dart';
 
 class TrainingScreen extends StatelessWidget {
   const TrainingScreen({super.key});
@@ -69,7 +70,11 @@ class _TrainingContentState extends State<TrainingContent> with SingleTickerProv
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const StartScreen()),
+            (route) => false,
+          ),
         ),
         actions: [
           Padding(
