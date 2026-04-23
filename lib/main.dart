@@ -58,13 +58,14 @@ class _StartScreenState extends State<StartScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // 背景画像（画面全体をカバー）
-          Container(
-            color: Colors.black,
-            child: Positioned.fill(
+          // 背景画像（画面全体をカバー、最大幅に合わせる）
+          SizedBox.expand(
+            child: Container(
+              color: Colors.black,
               child: Image.asset(
                 'assets/images/bg_title_start.png',
                 fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
             ),
           ),
