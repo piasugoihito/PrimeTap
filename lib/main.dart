@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'training_screen.dart';
+import 'main_navigation.dart';
 import 'record_widgets.dart';
 import 'disclaimer_screen.dart';
 import 'audio_manager.dart';
@@ -93,7 +94,7 @@ class _StartScreenState extends State<StartScreen> {
                     label: '育成を始める',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TrainingScreen()),
+                      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
                     ),
                   ),
                   const SizedBox(height: 20),

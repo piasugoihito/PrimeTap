@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'game_models.dart';
-import 'training_screen.dart';
+import 'main_navigation.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
 
 class WorldMapScreen extends StatelessWidget {
-  const WorldMapScreen({super.key});
+  final bool isTab;
+  const WorldMapScreen({super.key, this.isTab = false});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +17,7 @@ class WorldMapScreen extends StatelessWidget {
         title: Text('世界地図', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: AppTheme.lightCyan,
         elevation: 0,
-        leading: IconButton(
+        leading: isTab ? null : IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
           onPressed: () => Navigator.pop(context),
         ),
@@ -133,8 +134,9 @@ class _PoliticianCard extends StatelessWidget {
         onTap: politician.isUnlocked 
           ? () {
               controller.selectPolitician(politician);
+              // 育成画面（インデックス0）へ遷移
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const TrainingScreen()),
+                MaterialPageRoute(builder: (_) => const MainNavigationScreen(initialIndex: 0)),
                 (route) => route.isFirst,
               );
             }
@@ -184,8 +186,39 @@ class _PoliticianCard extends StatelessWidget {
   }
 }
 
+class MyPoliticiansScreen extends StatelessWidget {
+  final bool isTab;
+  const MyPoliticiansScreen({super.key, this.isTab = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<GameController>();
+    final unlockedPoliticians = controller.politicians.where((p) => p.isUnlocked).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('マイ政治家', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
+        backgroundColor: AppTheme.lightCyan,
+        elevation: 0,
+        leading: isTab ? null : IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(20),
+        itemCount: unlockedPoliticians.length,
+        itemBuilder: (context, index) {
+          return _PoliticianCard(politician: unlockedPoliticians[index]);
+        },
+      ),
+    );
+  }
+}
+
 class ItemScreen extends StatelessWidget {
-  const ItemScreen({super.key});
+  final bool isTab;
+  const ItemScreen({super.key, this.isTab = false});
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +228,7 @@ class ItemScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text('アイテム', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
           backgroundColor: AppTheme.lightCyan,
-          leading: IconButton(
+          leading: isTab ? null : IconButton(
             icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
             onPressed: () => Navigator.pop(context),
           ),
@@ -324,78 +357,36 @@ class OwnedItemsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = context.watch<GameController>().items.where((i) => i.isOwned).toList();
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
+    final controller = context.watch<GameController>();
+    final ownedItems = controller.items.where((i) => i.isOwned).toList();
+
+    if (ownedItems.isEmpty) {
+      return const Center(child: Text('まだ政策が採択されていません', style: TextStyle(color: Colors.grey)));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: ownedItems.length,
       itemBuilder: (context, index) {
-        final item = items[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: AppTheme.glossyDecoration(color: Colors.white),
-          child: ListTile(
-            leading: Image.asset('assets/images/item_generic.png', width: 40),
-            title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('効率UP: +${(item.efficiencyBoost * 100).toStringAsFixed(0)}%'),
-          ),
+        final item = ownedItems[index];
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: AppTheme.glossyDecoration(color: Colors.white),
+              child: Image.asset('assets/images/item_generic.png'),
+            ),
+            const SizedBox(height: 5),
+            Text(item.name, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          ],
         );
       },
-    );
-  }
-}
-
-class MyPoliticiansScreen extends StatelessWidget {
-  const MyPoliticiansScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final politicians = context.watch<GameController>().politicians.where((p) => p.isUnlocked).toList();
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('マイ政治家', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
-        backgroundColor: AppTheme.lightCyan,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: politicians.length,
-        itemBuilder: (context, index) {
-          final p = politicians[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: AppTheme.glossyDecoration(color: Colors.white),
-            child: ListTile(
-              leading: ClipOval(
-                child: Image.asset(
-                  p.currentFaceImage,
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('レベル: ${p.intimacyLevel}', style: const TextStyle(fontSize: 12)),
-                  Text('総ポイント: ${p.politicianPoints}', style: const TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold, fontSize: 12)),
-                ],
-              ),
-              onTap: () {
-                context.read<GameController>().selectPolitician(p);
-                // 育成画面へ遷移（現在のスタックをクリアしてTrainingScreenへ）
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const TrainingScreen()),
-                  (route) => route.isFirst,
-                );
-              },
-            ),
-          );
-        },
-      ),
     );
   }
 }

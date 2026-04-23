@@ -14,6 +14,7 @@ class AudioManager {
   Future<void> playBGM() async {
     if (_isMuted) return;
     await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+    await _bgmPlayer.setVolume(0.5); // 音量を半分に設定
     await _bgmPlayer.play(AssetSource('sounds/bgm_main.wav'));
   }
 

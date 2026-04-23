@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'game_models.dart';
-import 'game_screens.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
 
-class TrainingScreen extends StatefulWidget {
+class TrainingScreen extends StatelessWidget {
   const TrainingScreen({super.key});
 
   @override
-  State<TrainingScreen> createState() => _TrainingScreenState();
+  Widget build(BuildContext context) {
+    // 以前のTrainingScreenは、現在はMainNavigationScreenの初期タブとして機能する
+    // 直接ここに来る場合は、MainNavigationScreenでラップして表示する
+    return const TrainingContent();
+  }
 }
 
-class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProviderStateMixin {
+class TrainingContent extends StatefulWidget {
+  const TrainingContent({super.key});
+
+  @override
+  State<TrainingContent> createState() => _TrainingContentState();
+}
+
+class _TrainingContentState extends State<TrainingContent> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
@@ -56,6 +66,10 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
         title: Text('育成', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -78,188 +92,125 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Text(
-            politician.name,
-            style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 20, showShadow: false),
-                child: Text(
-                  '親密度レベル: ${politician.intimacyLevel}', 
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: AppTheme.glossyDecoration(color: Colors.orangeAccent, borderRadius: 20, showShadow: false),
-                child: Text(
-                  '速度: ${controller.currentTapSpeed}', 
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: _onTap,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 発光エフェクト
-                  Container(
-                    width: 280,
-                    height: 280,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryCyan.withValues(alpha: 0.5),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          // UI以外をタップした時に無効音を流す
+          // ここではキャラクター以外の場所をタップした場合
+          AudioManager().playSE('se_tap_invalid.mp3').catchError((_) {}); // ファイルがない場合のエラー回避
+        },
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              politician.name,
+              style: AppTheme.glossyTextStyle(fontSize: 28, color: Colors.cyan[900]!),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: AppTheme.glossyDecoration(color: AppTheme.primaryCyan, borderRadius: 20, showShadow: false),
+                  child: Text(
+                    '親密度レベル: ${politician.intimacyLevel}', 
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
                   ),
-                  // キャラクター画像（レベルに応じて変化）
-                  Container(
-                    width: 250,
-                    height: 250,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      border: Border.all(color: Colors.white, width: 5),
-                      image: DecorationImage(
-                        image: AssetImage(politician.currentFaceImage),
-                        fit: BoxFit.cover,
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: AppTheme.glossyDecoration(color: Colors.orangeAccent, borderRadius: 20, showShadow: false),
+                  child: Text(
+                    '速度: ${controller.currentTapSpeed}', 
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: _onTap,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 発光エフェクト
+                    Container(
+                      width: 280,
+                      height: 280,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryCyan.withValues(alpha: 0.5),
+                            blurRadius: 40,
+                            spreadRadius: 10,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  // 鏡面反射オーバーレイ
-                  IgnorePointer(
-                    child: Container(
+                    // キャラクター画像（レベルに応じて変化）
+                    Container(
                       width: 250,
                       height: 250,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.4),
-                            Colors.white.withValues(alpha: 0.0),
-                            Colors.black.withValues(alpha: 0.05),
-                          ],
-                          stops: const [0.0, 0.5, 1.0],
+                        color: Colors.white,
+                        border: Border.all(color: Colors.white, width: 5),
+                        image: DecorationImage(
+                          image: AssetImage(politician.currentFaceImage),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
+                    // 鏡面反射オーバーレイ
+                    IgnorePointer(
+                      child: Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.4),
+                              Colors.white.withValues(alpha: 0.0),
+                              Colors.black.withValues(alpha: 0.05),
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: AppTheme.glossyDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: 15),
+              child: Column(
+                children: [
+                  Text(
+                    '総タップポイント: ${politician.politicianPoints}',
+                    style: AppTheme.glossyTextStyle(fontSize: 22, color: Colors.cyan[800]!),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '（総タップ回数: ${politician.politicianTaps}）',
+                    style: TextStyle(fontSize: 14, color: Colors.cyan[600]!),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 30),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: AppTheme.glossyDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: 15),
-            child: Column(
-              children: [
-                Text(
-                  '総タップポイント: ${politician.politicianPoints}',
-                  style: AppTheme.glossyTextStyle(fontSize: 22, color: Colors.cyan[800]!),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '（総タップ回数: ${politician.politicianTaps}）',
-                  style: TextStyle(fontSize: 14, color: Colors.cyan[600]!),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          _BottomMenu(),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomMenu extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, -5))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _MenuIcon(
-            icon: Icons.map,
-            label: '世界地図',
-            onTap: () {
-              AudioManager().playSE('se_menu_open.mp3');
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldMapScreen()));
-            },
-          ),
-          _MenuIcon(
-            icon: Icons.people,
-            label: 'マイ政治家',
-            onTap: () {
-              AudioManager().playSE('se_menu_open.mp3');
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPoliticiansScreen()));
-            },
-          ),
-          _MenuIcon(
-            icon: Icons.inventory,
-            label: 'アイテム',
-            onTap: () {
-              AudioManager().playSE('se_menu_open.mp3');
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const ItemScreen()));
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MenuIcon extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _MenuIcon({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: AppTheme.glossyDecoration(color: AppTheme.lightCyan, borderRadius: 15, showShadow: false),
-            child: Icon(icon, color: AppTheme.deepCyan, size: 28),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: AppTheme.deepCyan, fontSize: 12, fontWeight: FontWeight.bold)),
-        ],
+            const Spacer(flex: 2),
+          ],
+        ),
       ),
     );
   }
