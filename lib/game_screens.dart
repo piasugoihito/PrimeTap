@@ -123,12 +123,21 @@ class _PoliticianCard extends StatelessWidget {
     final controller = context.watch<GameController>();
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(12),
       decoration: AppTheme.glossyDecoration(
         color: politician.isUnlocked ? Colors.white : Colors.grey[200]!,
         showShadow: true,
       ),
       child: ListTile(
+        onTap: politician.isUnlocked 
+          ? () {
+              controller.selectPolitician(politician);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const TrainingScreen()),
+                (route) => route.isFirst,
+              );
+            }
+          : null,
+        contentPadding: const EdgeInsets.all(12),
         leading: ClipOval(
           child: Image.asset(
             politician.currentFaceImage,
