@@ -47,6 +47,7 @@ class _TrainingContentState extends State<TrainingContent> with SingleTickerProv
 
   void _onTap() {
     _animationController.forward().then((_) => _animationController.reverse());
+    AudioManager().playSE('se_tap.mp3').catchError((_) {});
     context.read<GameController>().handleTap();
   }
 
@@ -61,7 +62,7 @@ class _TrainingContentState extends State<TrainingContent> with SingleTickerProv
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.lightCyan,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('育成', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
         backgroundColor: Colors.transparent,
@@ -92,14 +93,16 @@ class _TrainingContentState extends State<TrainingContent> with SingleTickerProv
           ),
         ],
       ),
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          // UI以外をタップした時に無効音を流す
-          // ここではキャラクター以外の場所をタップした場合
-          AudioManager().playSE('se_tap_invalid.mp3').catchError((_) {}); // ファイルがない場合のエラー回避
-        },
-        child: Column(
+      body: Stack(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              // UI以外をタップした時に無効音を流す
+              AudioManager().playSE('無効音.mp3').catchError((_) {});
+            },
+          ),
+          Column(
           children: [
             const SizedBox(height: 20),
             Text(
@@ -211,7 +214,7 @@ class _TrainingContentState extends State<TrainingContent> with SingleTickerProv
             const Spacer(flex: 2),
           ],
         ),
-      ),
+      ],
     );
   }
 }

@@ -7,6 +7,7 @@ import 'record_widgets.dart';
 import 'disclaimer_screen.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
+import 'scrolling_background.dart';
 
 void main() {
   runApp(
@@ -52,14 +53,18 @@ class _StartScreenState extends State<StartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<GameController>();
+
     return Scaffold(
       body: Stack(
         children: [
           // 背景画像
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/bg_title_start.png',
-              fit: BoxFit.cover,
+            child: ScrollingBackground(
+              child: Image.asset(
+                'assets/images/bg_title_start.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           // オーバーレイ
@@ -90,13 +95,16 @@ class _StartScreenState extends State<StartScreen> {
                   ),
                   const Spacer(flex: 4),
                   // ボタン群
-                  GlossyButton(
-                    label: '育成を始める',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+                  if (!controller.isInitialized)
+                    const CircularProgressIndicator(color: Colors.white)
+                  else
+                    GlossyButton(
+                      label: '育成を始める',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 20),
                   GlossyButton(
                     label: '記録を見る',

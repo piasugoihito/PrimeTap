@@ -14,9 +14,10 @@ class WorldMapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('世界地図', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
-        backgroundColor: AppTheme.lightCyan,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: isTab ? null : IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppTheme.deepCyan),
@@ -38,9 +39,10 @@ class MyPoliticiansScreen extends StatelessWidget {
     final unlockedPoliticians = controller.politicians.where((p) => p.isUnlocked).toList();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('マイ政治家一覧', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
-        backgroundColor: AppTheme.lightCyan,
+        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: ListView.builder(
@@ -126,9 +128,10 @@ class ItemsScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text('アイテム', style: AppTheme.glossyTextStyle(color: Colors.cyan[900]!)),
-          backgroundColor: AppTheme.lightCyan,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           bottom: TabBar(
             labelColor: AppTheme.deepCyan,

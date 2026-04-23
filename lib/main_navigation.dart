@@ -5,6 +5,7 @@ import 'training_screen.dart';
 import 'game_screens.dart';
 import 'audio_manager.dart';
 import 'theme.dart';
+import 'scrolling_background.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -50,7 +51,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
 
     return Scaffold(
-      body: screens[_selectedIndex],
+      body: ScrollingBackground(child: screens[_selectedIndex]),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         decoration: const BoxDecoration(

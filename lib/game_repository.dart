@@ -3,9 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'game_models.dart';
 
 class GameRepository {
-  static const String _userKey = 'user_profile_v4';
-  static const String _politiciansKey = 'politicians_list_v4';
-  static const String _itemsKey = 'items_list_v4';
+  static const String _userKey = 'user_profile_v5';
+  static const String _politiciansKey = 'politicians_list_v5';
+  static const String _itemsKey = 'items_list_v5';
 
   Future<void> saveUserProfile(UserProfile user) async {
     final prefs = await SharedPreferences.getInstance();
@@ -145,6 +145,20 @@ class GameRepository {
           'assets/images/pol_mex_leader.png',
           'assets/images/pol_mex_leader.png',
           'assets/images/pol_mex_leader.png',
+        ],
+        tier: 1,
+        requiredPoliticianIds: ['jp_leader'],
+      ),
+      Politician(
+        id: 'china_leader',
+        name: '中国首脳',
+        country: '中国',
+        rarity: Rarity.high,
+        odds: 4.0,
+        faceImages: [
+          'assets/images/pol_china_leader.png',
+          'assets/images/pol_china_leader.png',
+          'assets/images/pol_china_leader.png',
         ],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],

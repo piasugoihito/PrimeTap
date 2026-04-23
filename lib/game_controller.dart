@@ -9,7 +9,8 @@ class GameController extends ChangeNotifier {
   List<Politician> politicians = [];
   List<GameItem> items = [];
   Politician? selectedPolitician;
-
+  bool isInitialized = false;
+  
   GameController() {
     _init();
   }
@@ -53,6 +54,7 @@ class GameController extends ChangeNotifier {
         selectedPolitician = politicians.first;
       }
     } finally {
+      isInitialized = true;
       notifyListeners();
     }
   }
@@ -218,6 +220,16 @@ extension on GameRepository {
         rarity: Rarity.high,
         odds: 3.5,
         faceImages: ['assets/images/pol_mex_leader.png', 'assets/images/pol_mex_leader.png', 'assets/images/pol_mex_leader.png'],
+        tier: 1,
+        requiredPoliticianIds: ['jp_leader'],
+      ),
+      Politician(
+        id: 'china_leader',
+        name: '中国首脳',
+        country: '中国',
+        rarity: Rarity.high,
+        odds: 4.0,
+        faceImages: ['assets/images/pol_china_leader.png', 'assets/images/pol_china_leader.png', 'assets/images/pol_china_leader.png'],
         tier: 1,
         requiredPoliticianIds: ['jp_leader'],
       ),

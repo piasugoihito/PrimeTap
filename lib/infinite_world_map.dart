@@ -31,6 +31,7 @@ class _InfiniteWorldMapState extends State<InfiniteWorldMap> {
     MapPinData(country: 'イタリア', x: 630, y: 230),
     MapPinData(country: 'ロシア', x: 850, y: 120),
     MapPinData(country: 'メキシコ', x: 250, y: 350),
+    MapPinData(country: '中国', x: 950, y: 250),
   ];
 
   @override
