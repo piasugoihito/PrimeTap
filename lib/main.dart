@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'training_screen.dart';
 import 'record_widgets.dart';
+import 'disclaimer_screen.dart';
 import 'theme.dart';
 
 void main() {
@@ -92,30 +93,12 @@ class StartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('免責事項'),
-                          content: const SingleChildScrollView(
-                            child: Text(
-                              '1. 本アプリはエンターテインメントを目的としたフィクションであり、実在の人物、団体、国、政治的出来事とは一切関係ありません。\\n\\n'
-                              '2. アプリ内で使用されている画像や名称は、特定の個人を誹謗中傷したり、政治的意図を持って使用されているものではありません。\\n\\n'
-                              '3. 本アプリの利用によって生じた損害について、開発者は一切の責任を負いません。\\n\\n'
-                              '4. アプリ内のコンテンツは予告なく変更・削除される場合があります。',
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('承諾して閉じる'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DisclaimerScreen()),
+                    ),
                     child: Text(
-                      '免責事項',
+                      '免責事項 (Disclaimer)',
                       style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                     ),
                   ),
