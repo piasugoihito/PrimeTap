@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'game_controller.dart';
-import 'game_models.dart';
-import 'main_navigation.dart';
-import 'audio_manager.dart';
+import 'infinite_world_map.dart';
 import 'theme.dart';
 
 class WorldMapScreen extends StatelessWidget {
@@ -22,31 +18,7 @@ class WorldMapScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: InteractiveViewer(
-        constrained: false,
-        child: Stack(
-          children: [
-            Container(
-              width: 1200,
-              height: 800,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [Colors.blue[100]!, Colors.blue[300]!],
-                  center: Alignment.center,
-                  radius: 1.5,
-                ),
-              ),
-            ),
-            _CountryPin(top: 250, left: 850, country: '日本'),
-            _CountryPin(top: 350, left: 300, country: 'アメリカ'),
-            _CountryPin(top: 220, left: 550, country: 'イギリス'),
-            _CountryPin(top: 280, left: 580, country: 'フランス'),
-            _CountryPin(top: 320, left: 610, country: 'イタリア'),
-            _CountryPin(top: 180, left: 750, country: 'ロシア'),
-            _CountryPin(top: 450, left: 250, country: 'メキシコ'),
-          ],
-        ),
-      ),
+      body: const InfiniteWorldMap(),
     );
   }
 }
