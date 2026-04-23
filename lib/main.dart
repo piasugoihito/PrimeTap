@@ -4,6 +4,7 @@ import 'game_controller.dart';
 import 'training_screen.dart';
 import 'record_widgets.dart';
 import 'disclaimer_screen.dart';
+import 'audio_manager.dart';
 import 'theme.dart';
 
 void main() {
@@ -33,8 +34,20 @@ class PrimeTapApp extends StatelessWidget {
   }
 }
 
-class StartScreen extends StatelessWidget {
+class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
+
+  @override
+  State<StartScreen> createState() => _StartScreenState();
+}
+
+class _StartScreenState extends State<StartScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // BGMの再生開始
+    AudioManager().playBGM();
+  }
 
   @override
   Widget build(BuildContext context) {

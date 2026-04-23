@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'game_models.dart';
 import 'game_screens.dart';
+import 'audio_manager.dart';
 import 'theme.dart';
 
 class TrainingScreen extends StatefulWidget {
@@ -210,17 +211,26 @@ class _BottomMenu extends StatelessWidget {
           _MenuIcon(
             icon: Icons.map,
             label: '世界地図',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldMapScreen())),
+            onTap: () {
+              AudioManager().playSE('se_menu_open.mp3');
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const WorldMapScreen()));
+            },
           ),
           _MenuIcon(
             icon: Icons.people,
             label: 'マイ政治家',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPoliticiansScreen())),
+            onTap: () {
+              AudioManager().playSE('se_menu_open.mp3');
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPoliticiansScreen()));
+            },
           ),
           _MenuIcon(
             icon: Icons.inventory,
             label: 'アイテム',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ItemScreen())),
+            onTap: () {
+              AudioManager().playSE('se_menu_open.mp3');
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ItemScreen()));
+            },
           ),
         ],
       ),

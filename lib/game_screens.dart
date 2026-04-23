@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'game_controller.dart';
 import 'game_models.dart';
 import 'training_screen.dart';
+import 'audio_manager.dart';
 import 'theme.dart';
 
 class WorldMapScreen extends StatelessWidget {
@@ -79,6 +80,7 @@ class _CountryPin extends StatelessWidget {
   }
 
   void _showCatalog(BuildContext context) {
+    AudioManager().playSE('se_menu_open.mp3');
     final politicians = context.read<GameController>().politicians.where((p) => p.country == country).toList();
     showModalBottomSheet(
       context: context,
@@ -244,8 +246,15 @@ class _GachaTabState extends State<GachaTab> with SingleTickerProviderStateMixin
       _result = null;
     });
 
+    AudioManager().playSE('se_gacha_spinning.mp3');
     await _controller.forward(from: 0);
     final res = await controller.tryGacha();
+
+    if (res != null) {
+      AudioManager().playSE('se_gacha_success.mp3');
+    } else {
+      AudioManager().playSE('se_gacha_fail.mp3');
+    }
 
     setState(() {
       _isSpinning = false;

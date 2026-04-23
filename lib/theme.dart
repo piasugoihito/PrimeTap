@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'audio_manager.dart';
 
 class AppTheme {
   static const Color primaryCyan = Color(0xFF00E5FF);
@@ -78,7 +79,10 @@ class GlossyButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        AudioManager().playSE('se_tap.mp3');
+        onTap();
+      },
       child: Container(
         width: width,
         height: height,
