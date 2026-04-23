@@ -46,7 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const TrainingContent(),
       const WorldMapScreen(isTab: true),
       const MyPoliticiansScreen(isTab: true),
-      const ItemScreen(isTab: true),
+      const ItemsScreen(isTab: true),
     ];
 
     return Scaffold(

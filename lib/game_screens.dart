@@ -29,7 +29,8 @@ class WorldMapScreen extends StatelessWidget {
 }
 
 class MyPoliticiansScreen extends StatelessWidget {
-  const MyPoliticiansScreen({super.key});
+  final bool isTab;
+  const MyPoliticiansScreen({super.key, this.isTab = false});
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +118,8 @@ class _MyPoliticianCard extends StatelessWidget {
 }
 
 class ItemsScreen extends StatelessWidget {
-  const ItemsScreen({super.key});
+  final bool isTab;
+  const ItemsScreen({super.key, this.isTab = false});
 
   @override
   Widget build(BuildContext context) {
